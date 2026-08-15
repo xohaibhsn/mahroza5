@@ -1,8 +1,15 @@
 import Link from "next/link";
-import type { ServiceItem } from "@/lib/constants";
+import type { SiteService } from "@/lib/siteTypes";
 
 type ServiceCardProps = {
-  service: ServiceItem;
+  service: SiteService | {
+    id: string;
+    title: string;
+    short: string;
+    description: string;
+    image: string;
+    icon?: string;
+  };
   href?: string;
 };
 
@@ -17,6 +24,11 @@ export default function ServiceCard({ service, href = "/services" }: ServiceCard
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           loading="lazy"
         />
+        {service.icon ? (
+          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-1 text-lg shadow">
+            {service.icon}
+          </span>
+        ) : null}
       </div>
       <div className="flex flex-1 flex-col p-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-secondary">

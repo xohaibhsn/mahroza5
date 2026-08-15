@@ -5,18 +5,27 @@ export type SiteService = {
   short: string;
   description: string;
   image: string;
+  icon?: string;
 };
 
 export type SiteTestimonial = {
   name: string;
   role: string;
   quote: string;
+  rating?: number;
 };
 
 export type SiteContent = {
   hero_heading: string;
   hero_subheading: string;
+  hero_button_text: string;
+  about_heading: string;
+  about_description: string;
   about_text: string;
+  why_point_1: string;
+  why_point_2: string;
+  why_point_3: string;
+  why_point_4: string;
   stat_patients: string;
   stat_services: string;
   stat_availability: string;

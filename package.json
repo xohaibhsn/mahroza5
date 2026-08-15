@@ -12,6 +12,7 @@
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
     "cookie": "^0.6.0",
+    "formidable": "^3.5.4",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.23.3",
     "next": "14.2.29",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie": "^0.6.0",
+    "@types/formidable": "^3.5.1",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^18",

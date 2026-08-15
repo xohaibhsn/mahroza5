@@ -6,6 +6,7 @@ type Service = {
   title: string;
   short_text: string | null;
   description: string | null;
+  icon: string | null;
   image: string | null;
   is_active: number;
   sort_order: number;
@@ -15,10 +16,25 @@ const emptyForm = {
   title: "",
   short_text: "",
   description: "",
+  icon: "🏥",
   image: "",
   is_active: true,
   sort_order: 0,
 };
+
+async function uploadImage(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", "qhcare/services");
+  const res = await fetch("/api/upload-image", {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok || !data.url) throw new Error(data.message || "Upload failed.");
+  return String(data.url);
+}
 
 export default function AdminServicesPage() {
   const [rows, setRows] = useState<Service[]>([]);
@@ -59,57 +75,24 @@ export default function AdminServicesPage() {
       title: row.title,
       short_text: row.short_text || "",
       description: row.description || "",
+      icon: row.icon || "🏥",
       image: row.image || "",
       is_active: Boolean(row.is_active),
       sort_order: row.sort_order || 0,
     });
-  };
-
-  const onUpload = async (file: File | null) => {
-    if (!file) return;
-    setUploading(true);
-    setError(null);
-
-    try {
-      const reader = new FileReader();
-      const base64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(String(reader.result || ""));
-        reader.onerror = () => reject(new Error("Failed to read image."));
-        reader.readAsDataURL(file);
-      });
-
-      const res = await fetch("/api/upload-image", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64, folder: "qhcare/services" }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.url) {
-        throw new Error(data.message || "Upload failed.");
-      }
-      setForm((f) => ({ ...f, image: data.url }));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed.");
-    } finally {
-      setUploading(false);
-    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
     setError(null);
-
     try {
-      const res = await fetch("/api/admin-services", { method: editingId ? "PATCH" : "POST",
+      const res = await fetch("/api/admin-services", {
+        method: editingId ? "PATCH" : "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: editingId || undefined,
-          ...form,
-          is_active: form.is_active,
-        }),
+        body: JSON.stringify({ id: editingId || undefined, ...form }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Save failed.");
@@ -122,9 +105,20 @@ export default function AdminServicesPage() {
     }
   };
 
+  const toggleActive = async (row: Service) => {
+    await fetch("/api/admin-services", {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: row.id, is_active: !row.is_active }),
+    });
+    await load();
+  };
+
   const remove = async (id: number) => {
     if (!confirm("Delete this service?")) return;
-    const res = await fetch("/api/admin-services", { method: "DELETE",
+    const res = await fetch("/api/admin-services", {
+      method: "DELETE",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
@@ -155,6 +149,12 @@ export default function AdminServicesPage() {
             />
             <input
               className="input-field"
+              placeholder="Icon emoji (e.g. 🏥)"
+              value={form.icon}
+              onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
+            />
+            <input
+              className="input-field"
               placeholder="Short text"
               value={form.short_text}
               onChange={(e) => setForm((f) => ({ ...f, short_text: e.target.value }))}
@@ -166,42 +166,36 @@ export default function AdminServicesPage() {
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Image (Cloudinary upload)
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                className="block w-full text-sm text-slate-600"
-                onChange={(e) => onUpload(e.target.files?.[0] || null)}
-              />
-              {uploading ? <p className="mt-1 text-xs text-secondary">Uploading...</p> : null}
-              {form.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={form.image}
-                  alt="Service preview"
-                  className="mt-3 h-28 w-full rounded-lg object-cover"
-                />
-              ) : null}
-            </div>
             <input
-              className="input-field"
-              placeholder="Image URL (optional override)"
-              value={form.image}
-              onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploading(true);
+                try {
+                  const url = await uploadImage(file);
+                  setForm((f) => ({ ...f, image: url }));
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "Upload failed");
+                } finally {
+                  setUploading(false);
+                }
+              }}
             />
+            {uploading ? <p className="text-xs text-secondary">Uploading...</p> : null}
+            {form.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.image} alt="" className="h-24 w-full rounded object-cover" />
+            ) : null}
             <input
               className="input-field"
               type="number"
               placeholder="Sort order"
               value={form.sort_order}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, sort_order: Number(e.target.value) || 0 }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, sort_order: Number(e.target.value) || 0 }))}
             />
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={form.is_active}
@@ -210,19 +204,13 @@ export default function AdminServicesPage() {
               Active
             </label>
           </div>
-          {error ? (
-            <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-          ) : null}
+          {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
           <div className="mt-4 flex gap-2">
             <button type="submit" className="btn-primary" disabled={saving || uploading}>
               {saving ? "Saving..." : editingId ? "Update" : "Add Service"}
             </button>
             {editingId ? (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium"
-              >
+              <button type="button" onClick={resetForm} className="rounded-lg border px-4 py-2 text-sm">
                 Cancel
               </button>
             ) : null}
@@ -230,49 +218,46 @@ export default function AdminServicesPage() {
         </form>
 
         <div className="overflow-hidden rounded-2xl bg-white shadow-card xl:col-span-3">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Service</th>
-                  <th className="px-4 py-3">Active</th>
-                  <th className="px-4 py-3">Order</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+          {loading ? (
+            <p className="p-8 text-center text-sm text-slate-500">Loading services...</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
-                      Loading...
-                    </td>
+                    <th className="px-4 py-3">Service</th>
+                    <th className="px-4 py-3">Active</th>
+                    <th className="px-4 py-3">Order</th>
+                    <th className="px-4 py-3">Actions</th>
                   </tr>
-                ) : rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
-                      No services yet.
-                    </td>
-                  </tr>
-                ) : (
-                  rows.map((row) => (
-                    <tr key={row.id} className="border-t border-slate-100">
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.id} className="border-t border-slate-100 align-top">
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          {row.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={row.image}
-                              alt=""
-                              className="h-12 w-16 rounded object-cover"
-                            />
-                          ) : null}
+                        <div className="flex gap-3">
+                          <span className="text-2xl">{row.icon || "🏥"}</span>
                           <div>
                             <p className="font-medium text-primary">{row.title}</p>
-                            <p className="text-xs text-slate-500">{row.short_text}</p>
+                            <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+                              {row.description}
+                            </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">{row.is_active ? "Yes" : "No"}</td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => toggleActive(row)}
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            row.is_active
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {row.is_active ? "Active" : "Inactive"}
+                        </button>
+                      </td>
                       <td className="px-4 py-3">{row.sort_order}</td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
@@ -293,11 +278,11 @@ export default function AdminServicesPage() {
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>

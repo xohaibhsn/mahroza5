@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", exact: true },
@@ -9,7 +9,7 @@ const navItems = [
   { href: "/admin/services", label: "Services" },
   { href: "/admin/testimonials", label: "Testimonials" },
   { href: "/admin/content", label: "Content" },
-  { href: "/admin/messages", label: "Messages" },
+  { href: "/admin/messages", label: "Messages", badge: true },
   { href: "/admin/settings", label: "Settings" },
 ] as const;
 
@@ -23,6 +23,19 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [checking, setChecking] = useState(true);
   const [username, setUsername] = useState("admin");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+
+  const loadUnread = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin-stats", { credentials: "include" });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setUnread(Number(data.data.unread_messages || 0));
+      }
+    } catch {
+      // ignore badge errors
+    }
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -38,6 +51,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         if (active) {
           setUsername(data.user?.username || "admin");
           setChecking(false);
+          loadUnread();
         }
       } catch {
         router.replace("/admin/login");
@@ -47,7 +61,13 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, loadUnread]);
+
+  useEffect(() => {
+    const onUpdate = () => loadUnread();
+    window.addEventListener("admin-messages-updated", onUpdate);
+    return () => window.removeEventListener("admin-messages-updated", onUpdate);
+  }, [loadUnread]);
 
   const logout = async () => {
     await fetch("/api/admin-logout", { method: "POST", credentials: "include" });
@@ -101,13 +121,18 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                   isActive(item.href, Boolean((item as { exact?: boolean }).exact))
                     ? "bg-white/15 text-white"
                     : "text-white/75 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                {item.label}
+                <span>{item.label}</span>
+                {"badge" in item && item.badge && unread > 0 ? (
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-white">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                ) : null}
               </Link>
             ))}
           </nav>

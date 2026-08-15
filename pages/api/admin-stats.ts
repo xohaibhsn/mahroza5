@@ -15,16 +15,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await ensureAdminSchema();
     const pool = getPool();
 
-    const [[appointments], [pending], [services], [messages], [testimonials]] =
-      await Promise.all([
-        pool.query("SELECT COUNT(*) AS count FROM appointments"),
-        pool.query(
-          `SELECT COUNT(*) AS count FROM appointments WHERE status = 'pending' OR status IS NULL OR status = ''`
-        ),
-        pool.query("SELECT COUNT(*) AS count FROM services"),
-        pool.query("SELECT COUNT(*) AS count FROM messages"),
-        pool.query("SELECT COUNT(*) AS count FROM testimonials"),
-      ]);
+    const [
+      [appointments],
+      [pending],
+      [services],
+      [messages],
+      [unread],
+      [testimonials],
+      [recentAppointments],
+      [recentMessages],
+    ] = await Promise.all([
+      pool.query("SELECT COUNT(*) AS count FROM appointments"),
+      pool.query(
+        `SELECT COUNT(*) AS count FROM appointments WHERE status = 'pending' OR status IS NULL OR status = ''`
+      ),
+      pool.query("SELECT COUNT(*) AS count FROM services"),
+      pool.query("SELECT COUNT(*) AS count FROM messages"),
+      pool.query("SELECT COUNT(*) AS count FROM messages WHERE is_read = 0"),
+      pool.query("SELECT COUNT(*) AS count FROM testimonials"),
+      pool.query(
+        `SELECT id, name, phone, service, status, created_at
+         FROM appointments ORDER BY created_at DESC LIMIT 5`
+      ),
+      pool.query(
+        `SELECT id, name, email, phone, message, is_read, created_at
+         FROM messages ORDER BY created_at DESC LIMIT 5`
+      ),
+    ]);
 
     const countOf = (rows: unknown) =>
       Number((rows as Array<{ count: number }>)[0]?.count || 0);
@@ -36,7 +53,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         pending: countOf(pending),
         services: countOf(services),
         messages: countOf(messages),
+        unread_messages: countOf(unread),
         testimonials: countOf(testimonials),
+        recent_appointments: recentAppointments,
+        recent_messages: recentMessages,
       },
     });
   } catch (error) {

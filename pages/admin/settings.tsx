@@ -1,7 +1,9 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
 
 type SettingsForm = {
+  site_title: string;
+  meta_description: string;
   phone: string;
   whatsapp: string;
   address1: string;
@@ -9,117 +11,77 @@ type SettingsForm = {
   email: string;
   logo_url: string;
   favicon_url: string;
-  site_title: string;
-  meta_description: string;
 };
 
-const empty: SettingsForm = {
-  phone: "",
-  whatsapp: "",
-  address1: "",
-  address2: "",
-  email: "",
+const defaults: SettingsForm = {
+  site_title: "QHC – Quality Health Care",
+  meta_description:
+    "Professional home healthcare services in Lahore. Nursing care, physiotherapy, doctor visits, and more.",
+  phone: "+92 3004334065",
+  whatsapp: "+92 3004334065",
+  address1: "817, Al Hafeez Shopping Mall, Gulberg, Lahore",
+  address2: "Office #5, Bismillah Plaza, Defense Road, Lahore",
+  email: "info@qhcare.com.pk",
   logo_url: "",
   favicon_url: "",
-  site_title: "",
-  meta_description: "",
 };
 
 async function uploadImage(file: File, folder: string) {
-  const reader = new FileReader();
-  const base64 = await new Promise<string>((resolve, reject) => {
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Failed to read image."));
-    reader.readAsDataURL(file);
-  });
-
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
   const res = await fetch("/api/upload-image", {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image: base64, folder }),
+    body: formData,
   });
   const data = await res.json();
-  if (!res.ok || !data.url) {
-    throw new Error(data.message || "Upload failed.");
-  }
+  if (!res.ok || !data.url) throw new Error(data.message || "Upload failed.");
   return String(data.url);
 }
 
 export default function AdminSettingsPage() {
-  const [form, setForm] = useState<SettingsForm>(empty);
+  const [form, setForm] = useState<SettingsForm>(defaults);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [uploadingFavicon, setUploadingFavicon] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<"logo" | "favicon" | null>(null);
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/admin-settings", { credentials: "include" });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to load settings.");
-        setForm({ ...empty, ...(data.data || {}) });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load.");
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin-settings", { credentials: "include" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to load settings.");
+      const raw = (data.data || {}) as Record<string, string>;
+      setForm({
+        site_title: raw.site_title || defaults.site_title,
+        meta_description: raw.meta_description || defaults.meta_description,
+        phone: raw.phone || defaults.phone,
+        whatsapp: raw.whatsapp || defaults.whatsapp,
+        address1: raw.address1 || raw.address_1 || defaults.address1,
+        address2: raw.address2 || raw.address_2 || defaults.address2,
+        email: raw.email || defaults.email,
+        logo_url: raw.logo_url || "",
+        favicon_url: raw.favicon_url || "",
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const persistPartial = async (partial: Partial<SettingsForm>) => {
-    const next = { ...form, ...partial };
-    setForm(next);
-    const res = await fetch("/api/admin-settings", {
-      method: "PATCH",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Save failed.");
-  };
-
-  const onLogoUpload = async (file: File | null) => {
-    if (!file) return;
-    setUploadingLogo(true);
-    setError(null);
-    setMessage(null);
-    try {
-      const url = await uploadImage(file, "qhcare/branding");
-      await persistPartial({ logo_url: url });
-      setMessage("Logo uploaded and saved.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Logo upload failed.");
-    } finally {
-      setUploadingLogo(false);
-    }
-  };
-
-  const onFaviconUpload = async (file: File | null) => {
-    if (!file) return;
-    setUploadingFavicon(true);
-    setError(null);
-    setMessage(null);
-    try {
-      const url = await uploadImage(file, "qhcare/branding");
-      await persistPartial({ favicon_url: url });
-      setMessage("Favicon uploaded and saved.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Favicon upload failed.");
-    } finally {
-      setUploadingFavicon(false);
-    }
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
     setMessage(null);
-    setError(null);
     try {
       const res = await fetch("/api/admin-settings", {
         method: "PATCH",
@@ -129,164 +91,163 @@ export default function AdminSettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Save failed.");
-      setMessage("Settings saved successfully.");
+      setMessage({ ok: true, text: "All settings saved." });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed.");
+      setMessage({
+        ok: false,
+        text: err instanceof Error ? err.message : "Save failed.",
+      });
     } finally {
       setSaving(false);
     }
   };
 
+  const saveOne = async (key: keyof SettingsForm) => {
+    setMessage(null);
+    try {
+      const res = await fetch("/api/admin-settings", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: form[key] }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Save failed.");
+      setMessage({ ok: true, text: `${key.replace(/_/g, " ")} saved.` });
+    } catch (err) {
+      setMessage({
+        ok: false,
+        text: err instanceof Error ? err.message : "Save failed.",
+      });
+    }
+  };
+
+  const onUpload = async (kind: "logo" | "favicon", file: File) => {
+    setUploading(kind);
+    setMessage(null);
+    try {
+      const url = await uploadImage(file, kind === "logo" ? "qhcare/logo" : "qhcare/favicon");
+      const key = kind === "logo" ? "logo_url" : "favicon_url";
+      setForm((f) => ({ ...f, [key]: url }));
+      await fetch("/api/admin-settings", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: url }),
+      });
+      setMessage({ ok: true, text: `${kind} uploaded and saved.` });
+    } catch (err) {
+      setMessage({
+        ok: false,
+        text: err instanceof Error ? err.message : "Upload failed.",
+      });
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const fields: Array<{ key: keyof SettingsForm; label: string; multiline?: boolean }> = [
+    { key: "site_title", label: "Site Title" },
+    { key: "meta_description", label: "Meta Description", multiline: true },
+    { key: "phone", label: "Phone" },
+    { key: "whatsapp", label: "WhatsApp" },
+    { key: "address1", label: "Address 1" },
+    { key: "address2", label: "Address 2" },
+    { key: "email", label: "Email" },
+  ];
+
   return (
     <AdminLayout title="Settings">
+      {error ? (
+        <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+      ) : null}
+
       {loading ? (
-        <p className="text-sm text-slate-500">Loading settings...</p>
+        <div className="rounded-2xl bg-white p-8 text-center text-sm text-slate-500 shadow-card">
+          Loading settings...
+        </div>
       ) : (
-        <form onSubmit={onSubmit} className="max-w-3xl space-y-6">
-          <section className="rounded-2xl bg-white p-6 shadow-card">
-            <h2 className="text-lg font-semibold text-primary">Branding</h2>
-            <div className="mt-4 grid gap-6 md:grid-cols-2">
-              <div>
-                <p className="mb-2 text-sm font-medium text-slate-700">Logo Upload</p>
-                {form.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={form.logo_url}
-                    alt="Current logo"
-                    className="mb-3 h-16 w-auto max-w-full rounded border border-slate-100 bg-slate-50 object-contain p-2"
+        <form onSubmit={onSubmit} className="space-y-6 rounded-2xl bg-white p-6 shadow-card">
+          {fields.map((field) => (
+            <div key={field.key}>
+              <label className="mb-1 block text-sm font-medium text-slate-700">{field.label}</label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                {field.multiline ? (
+                  <textarea
+                    className="input-field flex-1"
+                    rows={3}
+                    value={form[field.key]}
+                    onChange={(e) => setForm((f) => ({ ...f, [field.key]: e.target.value }))}
                   />
                 ) : (
-                  <p className="mb-3 text-xs text-slate-500">No logo uploaded yet.</p>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="block w-full text-sm text-slate-600"
-                  onChange={(e) => onLogoUpload(e.target.files?.[0] || null)}
-                />
-                {uploadingLogo ? (
-                  <p className="mt-1 text-xs text-secondary">Uploading logo...</p>
-                ) : null}
-                <button
-                  type="button"
-                  className="mt-2 text-xs font-semibold text-red-600"
-                  onClick={() => persistPartial({ logo_url: "" }).catch((err) => setError(String(err.message || err)))}
-                >
-                  Remove logo
-                </button>
-              </div>
-
-              <div>
-                <p className="mb-2 text-sm font-medium text-slate-700">Favicon Upload</p>
-                {form.favicon_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={form.favicon_url}
-                    alt="Current favicon"
-                    className="mb-3 h-12 w-12 rounded border border-slate-100 bg-slate-50 object-contain p-1"
+                  <input
+                    className="input-field flex-1"
+                    value={form[field.key]}
+                    onChange={(e) => setForm((f) => ({ ...f, [field.key]: e.target.value }))}
                   />
-                ) : (
-                  <p className="mb-3 text-xs text-slate-500">Using default /favicon.ico</p>
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="block w-full text-sm text-slate-600"
-                  onChange={(e) => onFaviconUpload(e.target.files?.[0] || null)}
-                />
-                {uploadingFavicon ? (
-                  <p className="mt-1 text-xs text-secondary">Uploading favicon...</p>
-                ) : null}
                 <button
                   type="button"
-                  className="mt-2 text-xs font-semibold text-red-600"
-                  onClick={() =>
-                    persistPartial({ favicon_url: "" }).catch((err) =>
-                      setError(String(err.message || err))
-                    )
-                  }
+                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  onClick={() => saveOne(field.key)}
                 >
-                  Remove favicon
+                  Save
                 </button>
               </div>
             </div>
-          </section>
+          ))}
 
-          <section className="space-y-4 rounded-2xl bg-white p-6 shadow-card">
-            <h2 className="text-lg font-semibold text-primary">SEO & Contact</h2>
+          <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Site Title</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Logo Upload</label>
               <input
-                className="input-field"
-                value={form.site_title}
-                onChange={(e) => setForm((f) => ({ ...f, site_title: e.target.value }))}
+                type="file"
+                accept="image/*"
+                disabled={uploading === "logo"}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) onUpload("logo", file);
+                }}
               />
+              {form.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={form.logo_url} alt="Logo preview" className="mt-3 h-16 object-contain" />
+              ) : (
+                <p className="mt-2 text-xs text-slate-500">No logo set.</p>
+              )}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Meta Description
-              </label>
-              <textarea
-                className="input-field"
-                rows={3}
-                value={form.meta_description}
-                onChange={(e) => setForm((f) => ({ ...f, meta_description: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Phone</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Favicon Upload</label>
               <input
-                className="input-field"
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                type="file"
+                accept="image/*"
+                disabled={uploading === "favicon"}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) onUpload("favicon", file);
+                }}
               />
+              {form.favicon_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={form.favicon_url}
+                  alt="Favicon preview"
+                  className="mt-3 h-10 w-10 object-contain"
+                />
+              ) : (
+                <p className="mt-2 text-xs text-slate-500">No favicon set.</p>
+              )}
             </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">WhatsApp</label>
-              <input
-                className="input-field"
-                value={form.whatsapp}
-                onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Address 1</label>
-              <textarea
-                className="input-field"
-                rows={2}
-                value={form.address1}
-                onChange={(e) => setForm((f) => ({ ...f, address1: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Address 2</label>
-              <textarea
-                className="input-field"
-                rows={2}
-                value={form.address2}
-                onChange={(e) => setForm((f) => ({ ...f, address2: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
-              <input
-                className="input-field"
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              />
-            </div>
-          </section>
+          </div>
 
-          {error ? (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-          ) : null}
           {message ? (
-            <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{message}</p>
+            <p className={`text-sm ${message.ok ? "text-emerald-600" : "text-red-600"}`}>
+              {message.text}
+            </p>
           ) : null}
 
-          <button type="submit" className="btn-primary" disabled={saving}>
-            {saving ? "Saving..." : "Save Settings"}
+          <button type="submit" className="btn-primary" disabled={saving || Boolean(uploading)}>
+            {saving ? "Saving..." : "Save All"}
           </button>
         </form>
       )}

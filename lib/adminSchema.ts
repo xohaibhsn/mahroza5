@@ -16,6 +16,7 @@ export type ServiceRow = RowDataPacket & {
   title: string;
   short_text: string | null;
   description: string | null;
+  icon: string | null;
   image: string | null;
   is_active: number;
   sort_order: number;
@@ -27,6 +28,7 @@ export type TestimonialRow = RowDataPacket & {
   name: string;
   role: string | null;
   quote: string;
+  rating: number;
   is_active: number;
   sort_order: number;
   created_at: string;
@@ -47,12 +49,6 @@ export type MessageRow = RowDataPacket & {
   message: string;
   is_read: number;
   created_at: string;
-};
-
-export type AdminUserRow = RowDataPacket & {
-  id: number;
-  username: string;
-  password: string;
 };
 
 async function ignoreDuplicateColumn(error: unknown) {
@@ -103,6 +99,7 @@ export async function ensureAdminSchema() {
       title VARCHAR(255) NOT NULL,
       short_text VARCHAR(255) NULL,
       description TEXT NULL,
+      icon VARCHAR(50) NULL,
       image VARCHAR(500) NULL,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       sort_order INT NOT NULL DEFAULT 0,
@@ -111,18 +108,31 @@ export async function ensureAdminSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
 
+  try {
+    await pool.execute(`ALTER TABLE services ADD COLUMN icon VARCHAR(50) NULL`);
+  } catch (error) {
+    await ignoreDuplicateColumn(error);
+  }
+
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS testimonials (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT,
       name VARCHAR(255) NOT NULL,
       role VARCHAR(255) NULL,
       quote TEXT NOT NULL,
+      rating INT NOT NULL DEFAULT 5,
       is_active TINYINT(1) NOT NULL DEFAULT 1,
       sort_order INT NOT NULL DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
+
+  try {
+    await pool.execute(`ALTER TABLE testimonials ADD COLUMN rating INT NOT NULL DEFAULT 5`);
+  } catch (error) {
+    await ignoreDuplicateColumn(error);
+  }
 
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS content (
@@ -155,6 +165,12 @@ export async function ensureAdminSchema() {
       "hero_subheading",
       "Trusted nursing, diagnostics, and personal care at your doorstep across Lahore.",
     ],
+    ["hero_button_text", "Book Appointment"],
+    ["about_heading", "Care you can trust, closer to home"],
+    [
+      "about_description",
+      "QHC — Quality Health Care brings hospital-quality support into Lahore homes with compassion, skill, and reliability under Director Mahroza Rao.",
+    ],
     [
       "about_text",
       "QHC — Quality Health Care brings hospital-quality support into Lahore homes with compassion, skill, and reliability under Director Mahroza Rao.",
@@ -163,6 +179,10 @@ export async function ensureAdminSchema() {
     ["stat_services", "8"],
     ["stat_availability", "24/7"],
     ["stat_location", "Lahore"],
+    ["why_point_1", "Qualified Healthcare Professionals"],
+    ["why_point_2", "24/7 Availability Across Lahore"],
+    ["why_point_3", "Patient-Centric Home Care"],
+    ["why_point_4", "Seamless Continuum of Care"],
     ["phone", "+92 3004334065"],
     ["whatsapp", "+92 3004334065"],
     ["address1", "817, Al Hafeez Shopping Mall, Gulberg, Lahore"],
@@ -172,11 +192,8 @@ export async function ensureAdminSchema() {
     ["email", "info@qhcare.com.pk"],
     ["logo_url", ""],
     ["favicon_url", ""],
-    ["site_title", "QHC — Quality Health Care | Lahore"],
-    [
-      "meta_description",
-      "QHC provides professional home nursing, physiotherapy, doctor visits, diagnostics, elderly care, and baby care across Lahore, Pakistan.",
-    ],
+    ["site_title", "QHC - Quality Health Care"],
+    ["meta_description", "Professional home healthcare services in Lahore"],
   ];
 
   for (const [key, value] of defaults) {

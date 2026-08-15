@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === "GET") {
       const [rows] = await pool.query(
-        `SELECT id, name, role, quote, is_active, sort_order, created_at
+        `SELECT id, name, role, quote, rating, is_active, sort_order, created_at
          FROM testimonials
          ORDER BY sort_order ASC, id DESC`
       );
@@ -24,24 +24,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === "POST") {
       const name = String(req.body?.name || "").trim();
       const role = String(req.body?.role || "").trim();
-      const quote = String(req.body?.quote || "").trim();
+      const quote = String(req.body?.quote || req.body?.message || "").trim();
+      const rating = Math.min(5, Math.max(1, Number(req.body?.rating || 5)));
       const is_active = req.body?.is_active === false || req.body?.is_active === 0 ? 0 : 1;
       const sort_order = Number(req.body?.sort_order || 0);
 
       if (!name || !quote) {
         return res.status(400).json({
           success: false,
-          message: "Name and quote are required.",
+          message: "Name and message are required.",
         });
       }
 
       const [result] = await pool.execute(
-        `INSERT INTO testimonials (name, role, quote, is_active, sort_order)
-         VALUES (:name, :role, :quote, :is_active, :sort_order)`,
+        `INSERT INTO testimonials (name, role, quote, rating, is_active, sort_order)
+         VALUES (:name, :role, :quote, :rating, :is_active, :sort_order)`,
         {
           name,
           role: role || null,
           quote,
+          rating,
           is_active,
           sort_order: Number.isFinite(sort_order) ? sort_order : 0,
         }
@@ -56,16 +58,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === "PATCH") {
       const id = Number(req.body?.id);
+      if (!id) {
+        return res.status(400).json({ success: false, message: "id is required." });
+      }
+
+      if (typeof req.body?.is_active !== "undefined" && !req.body?.name && !req.body?.quote && !req.body?.message) {
+        const is_active = req.body?.is_active === false || req.body?.is_active === 0 ? 0 : 1;
+        const [result] = await pool.execute(
+          `UPDATE testimonials SET is_active = :is_active WHERE id = :id`,
+          { id, is_active }
+        );
+        if ((result as ResultSetHeader).affectedRows === 0) {
+          return res.status(404).json({ success: false, message: "Testimonial not found." });
+        }
+        return res.status(200).json({ success: true, message: "Testimonial updated." });
+      }
+
       const name = String(req.body?.name || "").trim();
       const role = String(req.body?.role || "").trim();
-      const quote = String(req.body?.quote || "").trim();
+      const quote = String(req.body?.quote || req.body?.message || "").trim();
+      const rating = Math.min(5, Math.max(1, Number(req.body?.rating || 5)));
       const is_active = req.body?.is_active === false || req.body?.is_active === 0 ? 0 : 1;
       const sort_order = Number(req.body?.sort_order || 0);
 
-      if (!id || !name || !quote) {
+      if (!name || !quote) {
         return res.status(400).json({
           success: false,
-          message: "id, name, and quote are required.",
+          message: "Name and message are required.",
         });
       }
 
@@ -74,6 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
          SET name = :name,
              role = :role,
              quote = :quote,
+             rating = :rating,
              is_active = :is_active,
              sort_order = :sort_order
          WHERE id = :id`,
@@ -82,6 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           name,
           role: role || null,
           quote,
+          rating,
           is_active,
           sort_order: Number.isFinite(sort_order) ? sort_order : 0,
         }

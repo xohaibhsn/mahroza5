@@ -24,6 +24,7 @@ export default function AdminMessagesPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to load messages.");
       setRows(data.data || []);
+      window.dispatchEvent(new Event("admin-messages-updated"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load.");
     } finally {
@@ -35,24 +36,26 @@ export default function AdminMessagesPage() {
     load();
   }, [load]);
 
-  const markRead = async (id: number, is_read: boolean) => {
-    const res = await fetch("/api/admin-messages", { credentials: "include", method: "PATCH",
+  const markRead = async (id: number) => {
+    const res = await fetch("/api/admin-messages", {
+      method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, is_read }),
+      body: JSON.stringify({ id, is_read: true }),
     });
     const data = await res.json();
     if (!res.ok) {
       alert(data.message || "Update failed");
       return;
     }
-    setRows((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, is_read: is_read ? 1 : 0 } : row))
-    );
+    await load();
   };
 
   const remove = async (id: number) => {
     if (!confirm("Delete this message?")) return;
-    const res = await fetch("/api/admin-messages", { credentials: "include", method: "DELETE",
+    const res = await fetch("/api/admin-messages", {
+      method: "DELETE",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
@@ -61,7 +64,7 @@ export default function AdminMessagesPage() {
       alert(data.message || "Delete failed");
       return;
     }
-    setRows((prev) => prev.filter((row) => row.id !== id));
+    await load();
   };
 
   return (
@@ -71,83 +74,85 @@ export default function AdminMessagesPage() {
       ) : null}
 
       <div className="overflow-hidden rounded-2xl bg-white shadow-card">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="px-4 py-3">From</th>
-                <th className="px-4 py-3">Contact</th>
-                <th className="px-4 py-3">Message</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+        {loading ? (
+          <p className="p-8 text-center text-sm text-slate-500">Loading messages...</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                    Loading...
-                  </td>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Contact</th>
+                  <th className="px-4 py-3">Message</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Actions</th>
                 </tr>
-              ) : rows.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                    No messages yet.
-                  </td>
-                </tr>
-              ) : (
-                rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={`border-t border-slate-100 align-top ${
-                      row.is_read ? "bg-white" : "bg-sky-50/60"
-                    }`}
-                  >
-                    <td className="px-4 py-3 font-medium text-primary">{row.name}</td>
-                    <td className="px-4 py-3 text-slate-600">
-                      <div>{row.email || "—"}</div>
-                      <div>{row.phone || "—"}</div>
-                    </td>
-                    <td className="max-w-md px-4 py-3 text-slate-700">{row.message}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          row.is_read
-                            ? "bg-slate-100 text-slate-600"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
-                      >
-                        {row.is_read ? "Read" : "Unread"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-slate-500">
-                      {new Date(row.created_at).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col gap-2">
-                        <button
-                          type="button"
-                          onClick={() => markRead(row.id, !row.is_read)}
-                          className="rounded-md bg-secondary/10 px-3 py-1.5 text-xs font-semibold text-secondary"
-                        >
-                          Mark {row.is_read ? "Unread" : "Read"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => remove(row.id)}
-                          className="rounded-md bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700"
-                        >
-                          Delete
-                        </button>
-                      </div>
+              </thead>
+              <tbody>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                      No messages yet.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      className={`border-t border-slate-100 align-top ${
+                        row.is_read ? "" : "bg-blue-50/40"
+                      }`}
+                    >
+                      <td className="px-4 py-3 font-medium text-primary">{row.name}</td>
+                      <td className="px-4 py-3 text-xs text-slate-600">
+                        <p>{row.phone || "—"}</p>
+                        <p>{row.email || "—"}</p>
+                      </td>
+                      <td className="max-w-md px-4 py-3 text-slate-700">{row.message}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500">
+                        {row.created_at
+                          ? new Date(row.created_at).toLocaleString()
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            row.is_read
+                              ? "bg-slate-100 text-slate-600"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
+                        >
+                          {row.is_read ? "Read" : "Unread"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-2">
+                          {!row.is_read ? (
+                            <button
+                              type="button"
+                              onClick={() => markRead(row.id)}
+                              className="rounded-md bg-secondary/10 px-3 py-1.5 text-xs font-semibold text-secondary"
+                            >
+                              Mark as read
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            onClick={() => remove(row.id)}
+                            className="rounded-md bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

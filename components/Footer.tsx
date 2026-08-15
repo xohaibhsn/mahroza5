@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { company, navLinks, services } from "@/lib/constants";
+import { phoneToTel } from "@/lib/siteDataClient";
 
 export default function Footer() {
   const year = new Date().getFullYear();
   const { settings } = useSiteSettings();
+  const phone = settings.phone || company.phone;
+  const email = settings.email || company.email;
+  const address1 = settings.address1 || company.offices[0].address;
+  const address2 = settings.address2 || company.offices[1].address;
 
   return (
     <footer className="bg-primary text-white">
@@ -76,21 +81,23 @@ export default function Footer() {
           </h3>
           <ul className="mt-4 space-y-4 text-sm text-white/80">
             <li>
-              <a href={`tel:${company.phoneTel}`} className="transition hover:text-white">
-                {company.phone}
+              <a href={`tel:${phoneToTel(phone)}`} className="transition hover:text-white">
+                {phone}
               </a>
             </li>
             <li>
-              <a href={`mailto:${company.email}`} className="transition hover:text-white">
-                {company.email}
+              <a href={`mailto:${email}`} className="transition hover:text-white">
+                {email}
               </a>
             </li>
-            {company.offices.map((office) => (
-              <li key={office.label}>
-                <p className="font-medium text-white">{office.label}</p>
-                <p className="mt-1 leading-relaxed">{office.address}</p>
-              </li>
-            ))}
+            <li>
+              <p className="font-medium text-white">Office 1 — Gulberg</p>
+              <p className="mt-1 leading-relaxed">{address1}</p>
+            </li>
+            <li>
+              <p className="font-medium text-white">Office 2 — Defense Road</p>
+              <p className="mt-1 leading-relaxed">{address2}</p>
+            </li>
           </ul>
         </div>
       </div>
@@ -100,7 +107,7 @@ export default function Footer() {
           <p>
             © {year} {company.name} — {company.fullName}. All rights reserved.
           </p>
-          <p>Serving {company.city}, Pakistan · {company.website}</p>
+          <p>{company.website}</p>
         </div>
       </div>
     </footer>

@@ -15,11 +15,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const pool = getPool();
 
     if (req.method === "GET") {
-      const [rows] = await pool.query(
-        `SELECT id, name, phone, service, message, status, created_at
-         FROM appointments
-         ORDER BY created_at DESC`
-      );
+      const status = String(req.query.status || "").toLowerCase();
+      let rows;
+
+      if (status && ALLOWED_STATUS.has(status)) {
+        const [filtered] = await pool.execute(
+          `SELECT id, name, phone, service, message, status, created_at
+           FROM appointments
+           WHERE status = :status
+           ORDER BY created_at DESC`,
+          { status }
+        );
+        rows = filtered;
+      } else {
+        const [all] = await pool.query(
+          `SELECT id, name, phone, service, message, status, created_at
+           FROM appointments
+           ORDER BY created_at DESC`
+        );
+        rows = all;
+      }
+
       return res.status(200).json({ success: true, data: rows as AppointmentRow[] });
     }
 
@@ -52,10 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ success: false, message: "id is required." });
       }
 
-      const [result] = await pool.execute(`DELETE FROM appointments WHERE id = :id`, {
-        id,
-      });
-
+      const [result] = await pool.execute(`DELETE FROM appointments WHERE id = :id`, { id });
       if ((result as ResultSetHeader).affectedRows === 0) {
         return res.status(404).json({ success: false, message: "Appointment not found." });
       }

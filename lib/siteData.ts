@@ -13,8 +13,16 @@ const defaultContent: SiteContent = {
   hero_heading: company.tagline,
   hero_subheading:
     "Trusted nursing, diagnostics, and personal care at your doorstep across Lahore.",
+  hero_button_text: "Book Appointment",
+  about_heading: "Care you can trust, closer to home",
+  about_description:
+    "QHC — Quality Health Care brings hospital-quality support into Lahore homes with compassion, skill, and reliability under Director Mahroza Rao.",
   about_text:
     "QHC — Quality Health Care brings hospital-quality support into Lahore homes with compassion, skill, and reliability under Director Mahroza Rao.",
+  why_point_1: "Qualified Healthcare Professionals",
+  why_point_2: "24/7 Availability Across Lahore",
+  why_point_3: "Patient-Centric Home Care",
+  why_point_4: "Seamless Continuum of Care",
   stat_patients: "1000+",
   stat_services: "8",
   stat_availability: "24/7",
@@ -40,12 +48,13 @@ async function seedCatalogIfEmpty() {
     for (let i = 0; i < fallbackServices.length; i += 1) {
       const service = fallbackServices[i];
       await pool.execute(
-        `INSERT INTO services (title, short_text, description, image, is_active, sort_order)
-         VALUES (:title, :short_text, :description, :image, 1, :sort_order)`,
+        `INSERT INTO services (title, short_text, description, icon, image, is_active, sort_order)
+         VALUES (:title, :short_text, :description, :icon, :image, 1, :sort_order)`,
         {
           title: service.title,
           short_text: service.short,
           description: service.description,
+          icon: "🏥",
           image: service.image,
           sort_order: i + 1,
         }
@@ -62,8 +71,8 @@ async function seedCatalogIfEmpty() {
     for (let i = 0; i < fallbackTestimonials.length; i += 1) {
       const item = fallbackTestimonials[i];
       await pool.execute(
-        `INSERT INTO testimonials (name, role, quote, is_active, sort_order)
-         VALUES (:name, :role, :quote, 1, :sort_order)`,
+        `INSERT INTO testimonials (name, role, quote, rating, is_active, sort_order)
+         VALUES (:name, :role, :quote, 5, 1, :sort_order)`,
         {
           name: item.name,
           role: item.role,
@@ -81,10 +90,20 @@ function mapContent(rows: ContentRow[]): SiteContent {
     map[row.content_key] = row.content_value || "";
   }
 
+  const aboutDescription =
+    map.about_description || map.about_text || defaultContent.about_description;
+
   return {
     hero_heading: map.hero_heading || defaultContent.hero_heading,
     hero_subheading: map.hero_subheading || defaultContent.hero_subheading,
-    about_text: map.about_text || defaultContent.about_text,
+    hero_button_text: map.hero_button_text || defaultContent.hero_button_text,
+    about_heading: map.about_heading || defaultContent.about_heading,
+    about_description: aboutDescription,
+    about_text: aboutDescription,
+    why_point_1: map.why_point_1 || defaultContent.why_point_1,
+    why_point_2: map.why_point_2 || defaultContent.why_point_2,
+    why_point_3: map.why_point_3 || defaultContent.why_point_3,
+    why_point_4: map.why_point_4 || defaultContent.why_point_4,
     stat_patients: map.stat_patients || defaultContent.stat_patients,
     stat_services: map.stat_services || defaultContent.stat_services,
     stat_availability: map.stat_availability || defaultContent.stat_availability,
@@ -119,7 +138,7 @@ export async function getActiveServices(): Promise<SiteService[]> {
     await seedCatalogIfEmpty();
     const pool = getPool();
     const [rows] = await pool.query(
-      `SELECT id, title, short_text, description, image
+      `SELECT id, title, short_text, description, icon, image
        FROM services
        WHERE is_active = 1
        ORDER BY sort_order ASC, id ASC`
@@ -136,6 +155,7 @@ export async function getActiveServices(): Promise<SiteService[]> {
       title: row.title,
       short: row.short_text || "",
       description: row.description || "",
+      icon: row.icon || "🏥",
       image:
         row.image ||
         `https://placehold.co/600x400/1e3a5f/ffffff?text=${encodeURIComponent(row.title)}`,
@@ -152,7 +172,7 @@ export async function getActiveTestimonials(): Promise<SiteTestimonial[]> {
     await seedCatalogIfEmpty();
     const pool = getPool();
     const [rows] = await pool.query(
-      `SELECT name, role, quote
+      `SELECT name, role, quote, rating
        FROM testimonials
        WHERE is_active = 1
        ORDER BY sort_order ASC, id DESC`
@@ -164,6 +184,7 @@ export async function getActiveTestimonials(): Promise<SiteTestimonial[]> {
         name: item.name,
         role: item.role,
         quote: item.quote,
+        rating: 5,
       }));
     }
 
@@ -171,6 +192,7 @@ export async function getActiveTestimonials(): Promise<SiteTestimonial[]> {
       name: row.name,
       role: row.role || "",
       quote: row.quote,
+      rating: Number(row.rating) || 5,
     }));
   } catch (error) {
     console.error("getActiveTestimonials fallback:", error);
@@ -178,6 +200,7 @@ export async function getActiveTestimonials(): Promise<SiteTestimonial[]> {
       name: item.name,
       role: item.role,
       quote: item.quote,
+      rating: 5,
     }));
   }
 }

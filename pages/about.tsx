@@ -31,9 +31,11 @@ export default function AboutPage({ content }: AboutPageProps) {
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-secondary">
               Our Story
             </p>
-            <h2 className="section-title mt-2">Care you can trust, closer to home</h2>
+            <h2 className="section-title mt-2">
+              {content.about_heading || "Care you can trust, closer to home"}
+            </h2>
             <div className="mt-5 space-y-4 text-base leading-relaxed text-slate-600">
-              <p>{content.about_text}</p>
+              <p>{content.about_description || content.about_text}</p>
               <p>
                 We operate from offices in Gulberg and on Defense Road, and we serve patients across
                 Lahore with a single promise: <em className="text-primary">{content.hero_heading}</em>.

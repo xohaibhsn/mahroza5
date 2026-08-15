@@ -3,7 +3,6 @@ import Link from "next/link";
 import AppointmentForm from "@/components/AppointmentForm";
 import Layout from "@/components/Layout";
 import ServiceCard from "@/components/ServiceCard";
-import { whyChooseUs } from "@/lib/constants";
 import type { SiteContent, SiteService, SiteTestimonial } from "@/lib/siteTypes";
 
 function phoneToTel(phone: string) {
@@ -88,7 +87,7 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/appointment" className="btn-primary">
-                Book Appointment
+                {content.hero_button_text || "Book Appointment"}
               </Link>
               <Link href="/services" className="btn-outline">
                 Explore Services
@@ -100,8 +99,8 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
             <div className="absolute -inset-4 rounded-[2rem] bg-secondary/20 blur-2xl" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://placehold.co/720x560/4a90d9/ffffff?text=QHC+Home+Care"
-              alt="QHC home healthcare professionals"
+              src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600"
+              alt="Healthcare professional providing care"
               className="relative w-full rounded-[1.5rem] object-cover shadow-soft"
             />
           </div>
@@ -139,18 +138,26 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-secondary">
               Why Choose Us
             </p>
-            <h2 className="section-title mt-2">Why families across Lahore trust QHC</h2>
-            <p className="section-subtitle">{content.about_text}</p>
+            <h2 className="section-title mt-2">
+              {content.about_heading || "Why families across Lahore trust QHC"}
+            </h2>
+            <p className="section-subtitle">
+              {content.about_description || content.about_text}
+            </p>
 
             <ul className="mt-8 space-y-5">
-              {whyChooseUs.map((item, index) => (
-                <li key={item.title} className="flex gap-4">
+              {[
+                content.why_point_1,
+                content.why_point_2,
+                content.why_point_3,
+                content.why_point_4,
+              ].map((point, index) => (
+                <li key={`${index}-${point}`} className="flex gap-4">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
                     {whyIcons[index]}
                   </span>
                   <div>
-                    <h3 className="font-semibold text-primary">{item.title}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{item.text}</p>
+                    <p className="font-semibold text-primary">{point}</p>
                   </div>
                 </li>
               ))}
@@ -209,7 +216,13 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
               >
                 <div className="flex gap-1 text-secondary" aria-hidden>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <svg key={i} className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                    <svg
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < (item.rating || 5) ? "fill-current" : "fill-slate-200"
+                      }`}
+                      viewBox="0 0 20 20"
+                    >
                       <path d="M10 15.3l-5.9 3.5 1.6-6.5L.5 7.5l6.7-.5L10 1l2.8 6 6.7.5-5.2 4.8 1.6 6.5z" />
                     </svg>
                   ))}
