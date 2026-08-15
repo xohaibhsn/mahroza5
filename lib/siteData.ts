@@ -1,0 +1,184 @@
+import {
+  company,
+  services as fallbackServices,
+  testimonials as fallbackTestimonials,
+} from "@/lib/constants";
+import { ensureAdminSchema, type ContentRow, type ServiceRow, type TestimonialRow } from "@/lib/adminSchema";
+import { getPool } from "@/lib/db";
+import type { SiteContent, SiteService, SiteTestimonial } from "@/lib/siteTypes";
+
+export type { SiteContent, SiteService, SiteTestimonial };
+
+const defaultContent: SiteContent = {
+  hero_heading: company.tagline,
+  hero_subheading:
+    "Trusted nursing, diagnostics, and personal care at your doorstep across Lahore.",
+  about_text:
+    "QHC — Quality Health Care brings hospital-quality support into Lahore homes with compassion, skill, and reliability under Director Mahroza Rao.",
+  stat_patients: "1000+",
+  stat_services: "8",
+  stat_availability: "24/7",
+  stat_location: "Lahore",
+  phone: company.phone,
+  whatsapp: company.phone,
+  address1: company.offices[0].address,
+  address2: company.offices[1].address,
+  email: company.email,
+};
+
+async function seedCatalogIfEmpty() {
+  const pool = getPool();
+  const [serviceCountRows] = await pool.query("SELECT COUNT(*) AS count FROM services");
+  const serviceCount = Number((serviceCountRows as Array<{ count: number }>)[0]?.count || 0);
+
+  if (serviceCount === 0) {
+    for (let i = 0; i < fallbackServices.length; i += 1) {
+      const service = fallbackServices[i];
+      await pool.execute(
+        `INSERT INTO services (title, short_text, description, image, is_active, sort_order)
+         VALUES (:title, :short_text, :description, :image, 1, :sort_order)`,
+        {
+          title: service.title,
+          short_text: service.short,
+          description: service.description,
+          image: service.image,
+          sort_order: i + 1,
+        }
+      );
+    }
+  }
+
+  const [testimonialCountRows] = await pool.query("SELECT COUNT(*) AS count FROM testimonials");
+  const testimonialCount = Number(
+    (testimonialCountRows as Array<{ count: number }>)[0]?.count || 0
+  );
+
+  if (testimonialCount === 0) {
+    for (let i = 0; i < fallbackTestimonials.length; i += 1) {
+      const item = fallbackTestimonials[i];
+      await pool.execute(
+        `INSERT INTO testimonials (name, role, quote, is_active, sort_order)
+         VALUES (:name, :role, :quote, 1, :sort_order)`,
+        {
+          name: item.name,
+          role: item.role,
+          quote: item.quote,
+          sort_order: i + 1,
+        }
+      );
+    }
+  }
+}
+
+function mapContent(rows: ContentRow[]): SiteContent {
+  const map: Record<string, string> = {};
+  for (const row of rows) {
+    map[row.content_key] = row.content_value || "";
+  }
+
+  return {
+    hero_heading: map.hero_heading || defaultContent.hero_heading,
+    hero_subheading: map.hero_subheading || defaultContent.hero_subheading,
+    about_text: map.about_text || defaultContent.about_text,
+    stat_patients: map.stat_patients || defaultContent.stat_patients,
+    stat_services: map.stat_services || defaultContent.stat_services,
+    stat_availability: map.stat_availability || defaultContent.stat_availability,
+    stat_location: map.stat_location || defaultContent.stat_location,
+    phone: map.phone || defaultContent.phone,
+    whatsapp: map.whatsapp || map.phone || defaultContent.whatsapp,
+    address1: map.address1 || map.office1 || defaultContent.address1,
+    address2: map.address2 || map.office2 || defaultContent.address2,
+    email: map.email || defaultContent.email,
+  };
+}
+
+export async function getSiteContent(): Promise<SiteContent> {
+  try {
+    await ensureAdminSchema();
+    const pool = getPool();
+    const [rows] = await pool.query("SELECT content_key, content_value FROM content");
+    return mapContent(rows as ContentRow[]);
+  } catch (error) {
+    console.error("getSiteContent fallback:", error);
+    return defaultContent;
+  }
+}
+
+export async function getActiveServices(): Promise<SiteService[]> {
+  try {
+    await ensureAdminSchema();
+    await seedCatalogIfEmpty();
+    const pool = getPool();
+    const [rows] = await pool.query(
+      `SELECT id, title, short_text, description, image
+       FROM services
+       WHERE is_active = 1
+       ORDER BY sort_order ASC, id ASC`
+    );
+
+    const list = rows as ServiceRow[];
+    if (!list.length) {
+      return fallbackServices.map((service) => ({ ...service }));
+    }
+
+    return list.map((row) => ({
+      id: String(row.id),
+      dbId: row.id,
+      title: row.title,
+      short: row.short_text || "",
+      description: row.description || "",
+      image:
+        row.image ||
+        `https://placehold.co/600x400/1e3a5f/ffffff?text=${encodeURIComponent(row.title)}`,
+    }));
+  } catch (error) {
+    console.error("getActiveServices fallback:", error);
+    return fallbackServices.map((service) => ({ ...service }));
+  }
+}
+
+export async function getActiveTestimonials(): Promise<SiteTestimonial[]> {
+  try {
+    await ensureAdminSchema();
+    await seedCatalogIfEmpty();
+    const pool = getPool();
+    const [rows] = await pool.query(
+      `SELECT name, role, quote
+       FROM testimonials
+       WHERE is_active = 1
+       ORDER BY sort_order ASC, id DESC`
+    );
+
+    const list = rows as TestimonialRow[];
+    if (!list.length) {
+      return fallbackTestimonials.map((item) => ({
+        name: item.name,
+        role: item.role,
+        quote: item.quote,
+      }));
+    }
+
+    return list.map((row) => ({
+      name: row.name,
+      role: row.role || "",
+      quote: row.quote,
+    }));
+  } catch (error) {
+    console.error("getActiveTestimonials fallback:", error);
+    return fallbackTestimonials.map((item) => ({
+      name: item.name,
+      role: item.role,
+      quote: item.quote,
+    }));
+  }
+}
+
+export function phoneToTel(phone: string) {
+  return phone.replace(/[^\d+]/g, "") || company.phoneTel;
+}
+
+export function phoneToWhatsApp(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return company.whatsappUrl;
+  return `https://wa.me/${digits.startsWith("0") ? `92${digits.slice(1)}` : digits}`;
+}
