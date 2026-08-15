@@ -1,15 +1,26 @@
 import Link from "next/link";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { company, navLinks, services } from "@/lib/constants";
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const { settings } = useSiteSettings();
 
   return (
     <footer className="bg-primary text-white">
       <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <Link href="/" className="inline-flex items-baseline gap-2">
-            <span className="font-display text-3xl font-bold">QHC</span>
+          <Link href="/" className="inline-flex items-center gap-2">
+            {settings.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={settings.logo_url}
+                alt="QHC logo"
+                className="h-10 w-auto max-w-[160px] object-contain"
+              />
+            ) : (
+              <span className="font-display text-3xl font-bold">QHC</span>
+            )}
           </Link>
           <p className="mt-1 text-sm font-medium uppercase tracking-[0.16em] text-secondary-light">
             {company.fullName}

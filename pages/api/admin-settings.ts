@@ -3,7 +3,17 @@ import { methodNotAllowed, requireAdmin } from "@/lib/adminAuth";
 import { ensureAdminSchema, type ContentRow } from "@/lib/adminSchema";
 import { getPool } from "@/lib/db";
 
-const SETTINGS_KEYS = ["phone", "whatsapp", "address1", "address2", "email"] as const;
+const SETTINGS_KEYS = [
+  "phone",
+  "whatsapp",
+  "address1",
+  "address2",
+  "email",
+  "logo_url",
+  "favicon_url",
+  "site_title",
+  "meta_description",
+] as const;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const admin = requireAdmin(req, res);
@@ -17,7 +27,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const [rows] = await pool.query(
         `SELECT content_key, content_value
          FROM content
-         WHERE content_key IN ('phone','whatsapp','address1','address2','office1','office2','email')`
+         WHERE content_key IN (
+           'phone','whatsapp','address1','address2','office1','office2','email',
+           'logo_url','favicon_url','site_title','meta_description'
+         )`
       );
 
       const map: Record<string, string> = {};
@@ -33,6 +46,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           address1: map.address1 || map.office1 || "",
           address2: map.address2 || map.office2 || "",
           email: map.email || "",
+          logo_url: map.logo_url || "",
+          favicon_url: map.favicon_url || "",
+          site_title: map.site_title || "",
+          meta_description: map.meta_description || "",
         },
       });
     }

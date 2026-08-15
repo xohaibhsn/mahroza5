@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { company, navLinks } from "@/lib/constants";
 
 export default function Navbar() {
   const router = useRouter();
+  const { settings } = useSiteSettings();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -26,13 +28,24 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-primary shadow-soft">
       <div className="container-page flex h-16 items-center justify-between lg:h-[4.25rem]">
-        <Link href="/" className="group flex items-baseline gap-2" aria-label="QHC home">
-          <span className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            QHC
-          </span>
-          <span className="hidden text-xs font-medium uppercase tracking-[0.18em] text-secondary-light sm:inline">
-            {company.fullName}
-          </span>
+        <Link href="/" className="group flex items-center gap-2" aria-label="QHC home">
+          {settings.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={settings.logo_url}
+              alt="QHC logo"
+              className="h-10 w-auto max-w-[180px] object-contain sm:h-12"
+            />
+          ) : (
+            <>
+              <span className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                QHC
+              </span>
+              <span className="hidden text-xs font-medium uppercase tracking-[0.18em] text-secondary-light sm:inline">
+                {company.fullName}
+              </span>
+            </>
+          )}
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">

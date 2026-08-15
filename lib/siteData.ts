@@ -24,6 +24,11 @@ const defaultContent: SiteContent = {
   address1: company.offices[0].address,
   address2: company.offices[1].address,
   email: company.email,
+  logo_url: "",
+  favicon_url: "",
+  site_title: "QHC — Quality Health Care | Lahore",
+  meta_description:
+    "QHC provides professional home nursing, physiotherapy, doctor visits, diagnostics, elderly care, and baby care across Lahore, Pakistan.",
 };
 
 async function seedCatalogIfEmpty() {
@@ -89,6 +94,10 @@ function mapContent(rows: ContentRow[]): SiteContent {
     address1: map.address1 || map.office1 || defaultContent.address1,
     address2: map.address2 || map.office2 || defaultContent.address2,
     email: map.email || defaultContent.email,
+    logo_url: map.logo_url || "",
+    favicon_url: map.favicon_url || "",
+    site_title: map.site_title || defaultContent.site_title,
+    meta_description: map.meta_description || defaultContent.meta_description,
   };
 }
 

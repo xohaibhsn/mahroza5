@@ -26,4 +26,8 @@ export type SiteContent = {
   address1: string;
   address2: string;
   email: string;
+  logo_url: string;
+  favicon_url: string;
+  site_title: string;
+  meta_description: string;
 };

@@ -78,10 +78,11 @@ export default function AdminServicesPage() {
         reader.readAsDataURL(file);
       });
 
-      const res = await fetch("/api/admin-upload", { method: "POST",
+      const res = await fetch("/api/upload-image", {
+        method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64 }),
+        body: JSON.stringify({ image: base64, folder: "qhcare/services" }),
       });
       const data = await res.json();
       if (!res.ok || !data.url) {

@@ -10,7 +10,6 @@ export const config = {
   },
 };
 
-/** Kept for compatibility; new uploads should use /api/upload-image. */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const admin = requireAdmin(req, res);
   if (!admin) return;
@@ -20,6 +19,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const image = typeof req.body?.image === "string" ? req.body.image : "";
+  const folder =
+    typeof req.body?.folder === "string" && req.body.folder.trim()
+      ? req.body.folder.trim()
+      : "qhcare";
+
   if (!image || !image.startsWith("data:image/")) {
     return res.status(400).json({
       success: false,
@@ -30,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const cloudinary = getCloudinary();
     const uploaded = await cloudinary.uploader.upload(image, {
-      folder: "qhcare/services",
+      folder,
       resource_type: "image",
     });
 
@@ -40,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       public_id: uploaded.public_id,
     });
   } catch (error) {
-    console.error("admin-upload error:", error);
+    console.error("upload-image error:", error);
     return res.status(500).json({
       success: false,
       message: "Image upload failed. Check Cloudinary credentials.",

@@ -170,6 +170,13 @@ export async function ensureAdminSchema() {
     ["office1", "817, Al Hafeez Shopping Mall, Gulberg, Lahore"],
     ["office2", "Office #5, Bismillah Plaza, Defense Road, Lahore"],
     ["email", "info@qhcare.com.pk"],
+    ["logo_url", ""],
+    ["favicon_url", ""],
+    ["site_title", "QHC — Quality Health Care | Lahore"],
+    [
+      "meta_description",
+      "QHC provides professional home nursing, physiotherapy, doctor visits, diagnostics, elderly care, and baby care across Lahore, Pakistan.",
+    ],
   ];
 
   for (const [key, value] of defaults) {
