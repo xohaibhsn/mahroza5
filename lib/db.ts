@@ -1,24 +1,20 @@
 import mysql from "mysql2/promise";
 
-const required = ["DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME"] as const;
-
-function getDbConfig() {
-  for (const key of required) {
-    if (!process.env[key]) {
-      throw new Error(`Missing environment variable: ${key}`);
-    }
-  }
-
-  return {
-    host: process.env.DB_HOST!,
-    port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER!,
-    password: process.env.DB_PASSWORD!,
-    database: process.env.DB_NAME!,
+function createPool() {
+  return mysql.createPool({
+    host: process.env.DB_HOST || "srv497.hstgr.io",
+    port: parseInt(process.env.DB_PORT || "3306", 10),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 5,
+    queueLimit: 0,
+    connectTimeout: 30000,
     namedPlaceholders: true,
-  };
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
+  });
 }
 
 declare global {
@@ -28,10 +24,21 @@ declare global {
 
 export function getPool() {
   if (!global.mysqlPool) {
-    global.mysqlPool = mysql.createPool(getDbConfig());
+    global.mysqlPool = createPool();
   }
   return global.mysqlPool;
 }
+
+/** Default export used by simplified API routes (lazy singleton). */
+const pool = new Proxy({} as mysql.Pool, {
+  get(_target, prop) {
+    const real = getPool();
+    const value = Reflect.get(real, prop, real);
+    return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(real) : value;
+  },
+});
+
+export default pool;
 
 export async function ensureAppointmentsTable() {
   const { ensureAdminSchema } = await import("@/lib/adminSchema");

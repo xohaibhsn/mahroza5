@@ -29,8 +29,15 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     try {
       const res = await fetch("/api/admin-stats", { credentials: "include" });
       const data = await res.json();
-      if (res.ok && data.data) {
-        setUnread(Number(data.data.unread_messages || 0));
+      if (res.ok) {
+        setUnread(
+          Number(
+            data?.data?.unread_messages ??
+              data?.unread_messages ??
+              data?.unread ??
+              0
+          )
+        );
       }
     } catch {
       // ignore badge errors

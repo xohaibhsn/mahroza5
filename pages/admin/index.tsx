@@ -45,8 +45,24 @@ export default function AdminDashboardPage() {
       try {
         const res = await fetch("/api/admin-stats", { credentials: "include" });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to load dashboard.");
-        setStats(data.data);
+        if (!res.ok) {
+          throw new Error(data.message || data.error || "Failed to load dashboard.");
+        }
+        const payload = data.data || data;
+        setStats({
+          appointments: Number(payload.appointments || 0),
+          pending: Number(payload.pending || 0),
+          services: Number(payload.services || 0),
+          messages: Number(payload.messages || 0),
+          unread_messages: Number(
+            payload.unread_messages ?? payload.unread ?? 0
+          ),
+          testimonials: Number(payload.testimonials || 0),
+          recent_appointments:
+            payload.recent_appointments || payload.recentAppointments || [],
+          recent_messages:
+            payload.recent_messages || payload.recentMessages || [],
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load.");
       } finally {

@@ -1,66 +1,93 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { methodNotAllowed, requireAdmin } from "@/lib/adminAuth";
-import { ensureAdminSchema } from "@/lib/adminSchema";
-import { getPool } from "@/lib/db";
+import { parse } from "cookie";
+import { verify } from "jsonwebtoken";
+import pool from "@/lib/db";
+
+type CountRow = { count: number | string };
+
+async function countQuery(sql: string): Promise<number> {
+  try {
+    const [rows] = (await pool.execute(sql)) as [CountRow[], unknown];
+    return Number(rows?.[0]?.count || 0);
+  } catch (error) {
+    console.error("admin-stats count error:", sql, error);
+    return 0;
+  }
+}
+
+async function listQuery(sql: string): Promise<unknown[]> {
+  try {
+    const [rows] = (await pool.execute(sql)) as [unknown[], unknown];
+    return Array.isArray(rows) ? rows : [];
+  } catch (error) {
+    console.error("admin-stats list error:", sql, error);
+    return [];
+  }
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const admin = requireAdmin(req, res);
-  if (!admin) return;
+  try {
+    const cookies = parse(req.headers.cookie || "");
+    const token = cookies.admin_token;
+    if (!token) return res.status(401).json({ success: false, error: "Unauthorized" });
+    verify(token, process.env.JWT_SECRET || "qhcare_jwt_secret_2024");
+  } catch {
+    return res.status(401).json({ success: false, error: "Unauthorized" });
+  }
 
   if (req.method !== "GET") {
-    return methodNotAllowed(res, ["GET"]);
+    return res.status(405).json({ success: false, error: "Method not allowed" });
   }
 
   try {
-    await ensureAdminSchema();
-    const pool = getPool();
-
     const [
-      [appointments],
-      [pending],
-      [services],
-      [messages],
-      [unread],
-      [testimonials],
-      [recentAppointments],
-      [recentMessages],
+      appointments,
+      pending,
+      services,
+      messages,
+      unread,
+      testimonials,
+      recentAppointments,
+      recentMessages,
     ] = await Promise.all([
-      pool.query("SELECT COUNT(*) AS count FROM appointments"),
-      pool.query(
-        `SELECT COUNT(*) AS count FROM appointments WHERE status = 'pending' OR status IS NULL OR status = ''`
+      countQuery("SELECT COUNT(*) as count FROM appointments"),
+      countQuery(
+        "SELECT COUNT(*) as count FROM appointments WHERE status='pending' OR status IS NULL OR status=''"
       ),
-      pool.query("SELECT COUNT(*) AS count FROM services"),
-      pool.query("SELECT COUNT(*) AS count FROM messages"),
-      pool.query("SELECT COUNT(*) AS count FROM messages WHERE is_read = 0"),
-      pool.query("SELECT COUNT(*) AS count FROM testimonials"),
-      pool.query(
-        `SELECT id, name, phone, service, status, created_at
-         FROM appointments ORDER BY created_at DESC LIMIT 5`
+      countQuery("SELECT COUNT(*) as count FROM services"),
+      countQuery("SELECT COUNT(*) as count FROM messages"),
+      countQuery("SELECT COUNT(*) as count FROM messages WHERE is_read=0"),
+      countQuery("SELECT COUNT(*) as count FROM testimonials"),
+      listQuery(
+        "SELECT id, name, phone, service, status, created_at FROM appointments ORDER BY created_at DESC LIMIT 5"
       ),
-      pool.query(
-        `SELECT id, name, email, phone, message, is_read, created_at
-         FROM messages ORDER BY created_at DESC LIMIT 5`
+      listQuery(
+        "SELECT id, name, email, phone, message, is_read, created_at FROM messages ORDER BY created_at DESC LIMIT 5"
       ),
     ]);
 
-    const countOf = (rows: unknown) =>
-      Number((rows as Array<{ count: number }>)[0]?.count || 0);
+    const payload = {
+      appointments,
+      pending,
+      services,
+      messages,
+      unread,
+      unread_messages: unread,
+      testimonials,
+      recentAppointments,
+      recentMessages,
+      recent_appointments: recentAppointments,
+      recent_messages: recentMessages,
+    };
 
     return res.status(200).json({
       success: true,
-      data: {
-        appointments: countOf(appointments),
-        pending: countOf(pending),
-        services: countOf(services),
-        messages: countOf(messages),
-        unread_messages: countOf(unread),
-        testimonials: countOf(testimonials),
-        recent_appointments: recentAppointments,
-        recent_messages: recentMessages,
-      },
+      ...payload,
+      data: payload,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to load stats.";
     console.error("admin-stats error:", error);
-    return res.status(500).json({ success: false, message: "Failed to load stats." });
+    return res.status(500).json({ success: false, error: message, message });
   }
 }

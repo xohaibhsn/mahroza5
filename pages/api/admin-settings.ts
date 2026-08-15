@@ -56,15 +56,22 @@ function mapSettings(rows: ContentRow[]) {
   };
 }
 
+function defaultsResponse(res: NextApiResponse) {
+  return res.status(200).json({
+    success: true,
+    data: { ...SETTINGS_DEFAULTS },
+    ...SETTINGS_DEFAULTS,
+  });
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const admin = requireAdmin(req, res);
   if (!admin) return;
 
-  try {
-    await ensureAdminSchema();
-    const pool = getPool();
-
-    if (req.method === "GET") {
+  if (req.method === "GET") {
+    try {
+      await ensureAdminSchema();
+      const pool = getPool();
       await ensureSettingsDefaults();
 
       const [rows] = await pool.query(
@@ -76,15 +83,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
          )`
       );
 
+      const data = mapSettings(rows as ContentRow[]);
       return res.status(200).json({
         success: true,
-        data: mapSettings(rows as ContentRow[]),
+        data,
+        ...data,
       });
+    } catch (error) {
+      console.error("admin-settings GET fallback:", error);
+      return defaultsResponse(res);
     }
+  }
+
+  try {
+    await ensureAdminSchema();
+    const pool = getPool();
 
     if (req.method === "PATCH") {
       const updates = req.body?.data && typeof req.body.data === "object" ? req.body.data : req.body;
-      // Normalize address_1 / address_2 aliases from admin UI
       if (typeof updates?.address_1 === "string" && typeof updates.address1 !== "string") {
         updates.address1 = updates.address_1;
       }
