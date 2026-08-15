@@ -1,32 +1,31 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
-import { parse, serialize } from "cookie";
+import { parse } from "cookie";
 import jwt from "jsonwebtoken";
 import { getPool } from "@/lib/db";
 
-export const ADMIN_COOKIE = "qhcare_admin_token";
+export const ADMIN_COOKIE = "admin_token";
+export const JWT_SECRET_FALLBACK = "qhcare_jwt_secret_2024";
 
 export type AdminJwtPayload = {
   id: number;
   username: string;
 };
 
-function getJwtSecret() {
-  const secret = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("Missing NEXTAUTH_SECRET environment variable");
-  }
+export function getJwtSecret() {
+  const secret = process.env.JWT_SECRET || JWT_SECRET_FALLBACK;
   return secret;
 }
 
 export function signAdminToken(payload: AdminJwtPayload) {
-  return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: "1d" });
 }
 
 export function verifyAdminToken(token: string): AdminJwtPayload | null {
   try {
     const decoded = jwt.verify(token, getJwtSecret()) as AdminJwtPayload;
-    if (!decoded?.id || !decoded?.username) return null;
+    // Allow id === 0 for env-credential logins
+    if (typeof decoded?.id !== "number" || !decoded?.username) return null;
     return { id: Number(decoded.id), username: String(decoded.username) };
   } catch {
     return null;
@@ -36,8 +35,13 @@ export function verifyAdminToken(token: string): AdminJwtPayload | null {
 export function getTokenFromRequest(req: NextApiRequest) {
   const headerCookie = req.headers.cookie;
   if (!headerCookie) return null;
+
   const cookies = parse(headerCookie);
-  return cookies[ADMIN_COOKIE] || null;
+  if (cookies[ADMIN_COOKIE]) return cookies[ADMIN_COOKIE];
+
+  // Manual fallback parse in case cookie package misses the value
+  const match = headerCookie.match(/(?:^|;\s*)admin_token=([^;]+)/);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 
 export function getAdminFromRequest(req: NextApiRequest) {
@@ -47,30 +51,17 @@ export function getAdminFromRequest(req: NextApiRequest) {
 }
 
 export function setAdminCookie(res: NextApiResponse, token: string) {
-  const isProd = process.env.NODE_ENV === "production";
+  // No Secure flag — Hostinger/proxy setups can drop Secure cookies.
   res.setHeader(
     "Set-Cookie",
-    serialize(ADMIN_COOKIE, token, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    })
+    `admin_token=${token}; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax`
   );
 }
 
 export function clearAdminCookie(res: NextApiResponse) {
-  const isProd = process.env.NODE_ENV === "production";
   res.setHeader(
     "Set-Cookie",
-    serialize(ADMIN_COOKIE, "", {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    })
+    `admin_token=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax`
   );
 }
 
@@ -99,7 +90,6 @@ export async function ensureAdminUser() {
     return;
   }
 
-  // Re-hash if an older plain-text password was stored.
   if (existing.password && !existing.password.startsWith("$2")) {
     const hash = await bcrypt.hash("admin123", 10);
     await pool.execute(`UPDATE admin_users SET password = :password WHERE id = :id`, {

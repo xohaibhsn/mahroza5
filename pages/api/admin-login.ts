@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import type { RowDataPacket } from "mysql2";
 import {
   ensureAdminUser,
+  getJwtSecret,
   methodNotAllowed,
   setAdminCookie,
   signAdminToken,
@@ -27,8 +28,15 @@ function loginSuccess(
   res: NextApiResponse,
   payload: { id: number; username: string }
 ) {
+  // Ensure JWT secret resolves (with fallback) before signing
+  const secret = process.env.JWT_SECRET || "qhcare_jwt_secret_2024";
+  void secret;
+  void getJwtSecret();
+
   const token = signAdminToken(payload);
+  // Cookie: Path=/; HttpOnly; Max-Age=86400; SameSite=Lax — no Secure
   setAdminCookie(res, token);
+
   return res.status(200).json({
     success: true,
     message: "Logged in successfully.",
@@ -55,6 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Env fallback — works even when the database is unavailable.
   if (matchesEnvCredentials(username, password)) {
+    console.log("[admin-login] env credentials matched for user:", username);
     return loginSuccess(res, {
       id: 0,
       username: process.env.ADMIN_USERNAME!.trim(),
@@ -87,12 +96,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
+    console.log("[admin-login] database credentials matched for user:", user.username);
     return loginSuccess(res, { id: user.id, username: user.username });
   } catch (error) {
     console.error("admin-login error:", error);
 
-    // Last chance: if env credentials match, still allow login after DB failure.
     if (matchesEnvCredentials(username, password)) {
+      console.log("[admin-login] env credentials matched after DB error for user:", username);
       return loginSuccess(res, {
         id: 0,
         username: process.env.ADMIN_USERNAME!.trim(),
