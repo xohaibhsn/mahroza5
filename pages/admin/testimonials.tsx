@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
+import AdminToast from "@/components/AdminToast";
 
 type Testimonial = {
   id: number;
@@ -23,6 +24,7 @@ export default function AdminTestimonialsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,10 +83,16 @@ export default function AdminTestimonialsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Save failed.");
+      setToast({
+        ok: true,
+        text: editingId ? "Testimonial updated and saved." : "Testimonial added and saved.",
+      });
       resetForm();
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed.");
+      const text = err instanceof Error ? err.message : "Save failed.";
+      setError(text);
+      setToast({ ok: false, text });
     } finally {
       setSaving(false);
     }
@@ -111,6 +119,9 @@ export default function AdminTestimonialsPage() {
 
   return (
     <AdminLayout title="Testimonials">
+      {toast ? (
+        <AdminToast ok={toast.ok} text={toast.text} onClose={() => setToast(null)} />
+      ) : null}
       <div className="grid gap-6 xl:grid-cols-5">
         <form onSubmit={onSubmit} className="rounded-2xl bg-white p-5 shadow-card xl:col-span-2">
           <h2 className="text-lg font-semibold text-primary">

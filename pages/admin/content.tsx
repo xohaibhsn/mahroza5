@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
+import AdminToast from "@/components/AdminToast";
 import ImageSizeHint from "@/components/ImageSizeHint";
 
 type ContentGroups = {
@@ -95,6 +96,7 @@ export default function AdminContentPage() {
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, { ok: boolean; text: string }>>({});
+  const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
 
   const fieldId = (section: string, key: string) => `${section}.${key}`;
 
@@ -160,11 +162,14 @@ export default function AdminContentPage() {
         },
       }));
       setMessages((m) => ({ ...m, [id]: { ok: true, text: "Saved." } }));
+      setToast({ ok: true, text: `${field.label} saved.` });
     } catch (err) {
+      const text = err instanceof Error ? err.message : "Save failed.";
       setMessages((m) => ({
         ...m,
-        [id]: { ok: false, text: err instanceof Error ? err.message : "Save failed." },
+        [id]: { ok: false, text },
       }));
+      setToast({ ok: false, text: `${field.label}: ${text}` });
     } finally {
       setSavingKey(null);
     }
@@ -197,6 +202,9 @@ export default function AdminContentPage() {
 
   return (
     <AdminLayout title="Content">
+      {toast ? (
+        <AdminToast ok={toast.ok} text={toast.text} onClose={() => setToast(null)} />
+      ) : null}
       {loading ? (
         <div className="rounded-2xl bg-white p-8 text-center text-sm text-slate-500 shadow-card">
           Loading content...

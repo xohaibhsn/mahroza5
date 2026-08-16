@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
+import AdminToast from "@/components/AdminToast";
 import ImageSizeHint from "@/components/ImageSizeHint";
 
 type SettingsForm = {
@@ -123,12 +124,12 @@ export default function AdminSettingsPage() {
       applyRaw((data.data || data) as Record<string, string>);
       setMessage({
         ok: true,
-        text: "All settings saved. Open homepage and hard-refresh (Ctrl+F5).",
+        text: `Save All OK — saved: ${Object.keys(form).join(", ")}.`,
       });
     } catch (err) {
       setMessage({
         ok: false,
-        text: err instanceof Error ? err.message : "Save failed.",
+        text: err instanceof Error ? `Save All failed: ${err.message}` : "Save All failed.",
       });
     } finally {
       setSaving(false);
@@ -167,13 +168,13 @@ export default function AdminSettingsPage() {
         ok: true,
         text:
           kind === "og"
-            ? "Share / OG image saved. WhatsApp preview may take a few minutes to refresh."
-            : `${kind.toUpperCase()} saved to database. Hard-refresh website (Ctrl+F5) to see it.`,
+            ? "OG image saved to database. Use a new WhatsApp chat to test (old chats keep cached preview)."
+            : `${kind.toUpperCase()} saved to database.`,
       });
     } catch (err) {
       setMessage({
         ok: false,
-        text: err instanceof Error ? err.message : "Upload/save failed.",
+        text: err instanceof Error ? `Upload/save failed: ${err.message}` : "Upload/save failed.",
       });
     } finally {
       setUploading(null);
@@ -196,6 +197,9 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout title="Settings">
+      {message ? (
+        <AdminToast ok={message.ok} text={message.text} onClose={() => setMessage(null)} />
+      ) : null}
       {loading ? (
         <div className="rounded-2xl bg-white p-8 text-center text-sm text-slate-500 shadow-card">
           Loading settings...
@@ -327,7 +331,9 @@ export default function AdminSettingsPage() {
               note="JPG/PNG landscape — shows as thumbnail when link is shared on WhatsApp, Facebook, etc."
             />
             <p className="mb-2 text-xs text-slate-500">
-              Professionally called Open Graph image (og:image) / link preview image. If empty, logo is used as fallback.
+              Professionally called Open Graph image (og:image) / link preview. Keep file under ~300KB
+              if possible. Site serves a compressed JPG version to WhatsApp automatically. After
+              save, test in a <strong>new</strong> WhatsApp chat (old chats cache the old preview).
             </p>
             <input
               type="file"

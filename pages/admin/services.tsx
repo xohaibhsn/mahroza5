@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
+import AdminToast from "@/components/AdminToast";
 import ImageSizeHint from "@/components/ImageSizeHint";
 
 type Service = {
@@ -43,6 +44,7 @@ export default function AdminServicesPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -95,10 +97,16 @@ export default function AdminServicesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message || "Save failed.");
+      setToast({
+        ok: true,
+        text: editingId ? "Service updated and saved." : "Service added and saved.",
+      });
       resetForm();
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed.");
+      const text = err instanceof Error ? err.message : "Save failed.";
+      setError(text);
+      setToast({ ok: false, text });
     } finally {
       setSaving(false);
     }
@@ -133,6 +141,9 @@ export default function AdminServicesPage() {
 
   return (
     <AdminLayout title="Services">
+      {toast ? (
+        <AdminToast ok={toast.ok} text={toast.text} onClose={() => setToast(null)} />
+      ) : null}
       <div className="grid gap-6 xl:grid-cols-5">
         <form onSubmit={onSubmit} className="rounded-2xl bg-white p-5 shadow-card xl:col-span-2">
           <h2 className="text-lg font-semibold text-primary">
