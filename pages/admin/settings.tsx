@@ -46,16 +46,17 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<"logo" | "favicon" | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch("/api/admin-settings", { credentials: "include" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to load settings.");
-      const raw = (data.data || {}) as Record<string, string>;
+      // API returns flat object (or { data }) — never block on 500
+      const raw = (data?.data && typeof data.data === "object" ? data.data : data) as Record<
+        string,
+        string
+      >;
       setForm({
         site_title: raw.site_title || defaults.site_title,
         meta_description: raw.meta_description || defaults.meta_description,
@@ -67,8 +68,8 @@ export default function AdminSettingsPage() {
         logo_url: raw.logo_url || "",
         favicon_url: raw.favicon_url || "",
       });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load.");
+    } catch {
+      setForm(defaults);
     } finally {
       setLoading(false);
     }
@@ -158,10 +159,6 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout title="Settings">
-      {error ? (
-        <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-      ) : null}
-
       {loading ? (
         <div className="rounded-2xl bg-white p-8 text-center text-sm text-slate-500 shadow-card">
           Loading settings...

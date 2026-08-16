@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { parse } from "cookie";
-import { verify } from "jsonwebtoken";
+import { requireAdminJwt } from "@/lib/adminApiAuth";
 import pool from "@/lib/db";
 
 type CountRow = { count: number | string };
@@ -26,14 +25,7 @@ async function listQuery(sql: string): Promise<unknown[]> {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  try {
-    const cookies = parse(req.headers.cookie || "");
-    const token = cookies.admin_token;
-    if (!token) return res.status(401).json({ success: false, error: "Unauthorized" });
-    verify(token, process.env.JWT_SECRET || "qhcare_jwt_secret_2024");
-  } catch {
-    return res.status(401).json({ success: false, error: "Unauthorized" });
-  }
+  if (!requireAdminJwt(req, res)) return;
 
   if (req.method !== "GET") {
     return res.status(405).json({ success: false, error: "Method not allowed" });

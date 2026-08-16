@@ -1,21 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { methodNotAllowed, requireAdmin } from "@/lib/adminAuth";
-import { ensureAdminSchema, type ContentRow } from "@/lib/adminSchema";
-import { getPool } from "@/lib/db";
+import { requireAdminJwt } from "@/lib/adminApiAuth";
+import pool from "@/lib/db";
 
-const SETTINGS_KEYS = [
-  "phone",
-  "whatsapp",
-  "address1",
-  "address2",
-  "email",
-  "logo_url",
-  "favicon_url",
-  "site_title",
-  "meta_description",
-] as const;
-
-const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_KEYS)[number], string> = {
+const SETTINGS_DEFAULTS = {
+  site_title: "QHC - Quality Health Care",
+  meta_description: "Professional home healthcare services in Lahore",
   phone: "+92 3004334065",
   whatsapp: "+92 3004334065",
   address1: "817, Al Hafeez Shopping Mall, Gulberg, Lahore",
@@ -23,83 +12,69 @@ const SETTINGS_DEFAULTS: Record<(typeof SETTINGS_KEYS)[number], string> = {
   email: "info@qhcare.com.pk",
   logo_url: "",
   favicon_url: "",
-  site_title: "QHC - Quality Health Care",
-  meta_description: "Professional home healthcare services in Lahore",
 };
 
-async function ensureSettingsDefaults() {
-  const pool = getPool();
-  for (const [key, value] of Object.entries(SETTINGS_DEFAULTS)) {
-    await pool.execute(
-      `INSERT IGNORE INTO content (content_key, content_value) VALUES (:key, :value)`,
-      { key, value }
-    );
-  }
-}
+const SETTINGS_KEYS = Object.keys(SETTINGS_DEFAULTS) as Array<keyof typeof SETTINGS_DEFAULTS>;
 
-function mapSettings(rows: ContentRow[]) {
+function buildFromRows(
+  rows: Array<{ content_key?: string; content_value?: string | null; key?: string; value?: string | null }>
+) {
   const map: Record<string, string> = {};
   for (const row of rows) {
-    map[row.content_key] = row.content_value ?? "";
+    const k = row.content_key || row.key;
+    const v = row.content_value ?? row.value;
+    if (k) map[k] = v || "";
   }
 
   return {
+    site_title: map.site_title || SETTINGS_DEFAULTS.site_title,
+    meta_description: map.meta_description || SETTINGS_DEFAULTS.meta_description,
     phone: map.phone || SETTINGS_DEFAULTS.phone,
     whatsapp: map.whatsapp || SETTINGS_DEFAULTS.whatsapp,
-    address1: map.address1 || map.office1 || SETTINGS_DEFAULTS.address1,
-    address2: map.address2 || map.office2 || SETTINGS_DEFAULTS.address2,
+    address1: map.address1 || map.address_1 || map.office1 || SETTINGS_DEFAULTS.address1,
+    address2: map.address2 || map.address_2 || map.office2 || SETTINGS_DEFAULTS.address2,
     email: map.email || SETTINGS_DEFAULTS.email,
     logo_url: map.logo_url || "",
     favicon_url: map.favicon_url || "",
-    site_title: map.site_title || SETTINGS_DEFAULTS.site_title,
-    meta_description: map.meta_description || SETTINGS_DEFAULTS.meta_description,
   };
 }
 
-function defaultsResponse(res: NextApiResponse) {
-  return res.status(200).json({
-    success: true,
-    data: { ...SETTINGS_DEFAULTS },
-    ...SETTINGS_DEFAULTS,
-  });
-}
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const admin = requireAdmin(req, res);
-  if (!admin) return;
+  if (!requireAdminJwt(req, res)) return;
 
   if (req.method === "GET") {
     try {
-      await ensureAdminSchema();
-      const pool = getPool();
-      await ensureSettingsDefaults();
+      // Prefer settings section if that schema exists; otherwise use known keys
+      let rows: unknown[] = [];
+      try {
+        const [sectionRows] = await pool.execute(
+          "SELECT * FROM content WHERE section = 'settings'"
+        );
+        rows = sectionRows as unknown[];
+      } catch {
+        const [keyRows] = await pool.execute(
+          `SELECT * FROM content
+           WHERE content_key IN (
+             'phone','whatsapp','address1','address2','address_1','address_2',
+             'office1','office2','email','logo_url','favicon_url','site_title','meta_description'
+           )`
+        );
+        rows = keyRows as unknown[];
+      }
 
-      const [rows] = await pool.query(
-        `SELECT content_key, content_value
-         FROM content
-         WHERE content_key IN (
-           'phone','whatsapp','address1','address2','office1','office2','email',
-           'logo_url','favicon_url','site_title','meta_description'
-         )`
-      );
+      if (!rows.length) {
+        return res.status(200).json(SETTINGS_DEFAULTS);
+      }
 
-      const data = mapSettings(rows as ContentRow[]);
-      return res.status(200).json({
-        success: true,
-        data,
-        ...data,
-      });
+      return res.status(200).json(buildFromRows(rows as Array<Record<string, string>>));
     } catch (error) {
       console.error("admin-settings GET fallback:", error);
-      return defaultsResponse(res);
+      return res.status(200).json(SETTINGS_DEFAULTS);
     }
   }
 
-  try {
-    await ensureAdminSchema();
-    const pool = getPool();
-
-    if (req.method === "PATCH") {
+  if (req.method === "PATCH") {
+    try {
       const updates = req.body?.data && typeof req.body.data === "object" ? req.body.data : req.body;
       if (typeof updates?.address_1 === "string" && typeof updates.address1 !== "string") {
         updates.address1 = updates.address_1;
@@ -107,50 +82,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (typeof updates?.address_2 === "string" && typeof updates.address2 !== "string") {
         updates.address2 = updates.address_2;
       }
-      let changed = 0;
 
+      let changed = 0;
       for (const key of SETTINGS_KEYS) {
         if (typeof updates?.[key] !== "string") continue;
         await pool.execute(
           `INSERT INTO content (content_key, content_value)
-           VALUES (:key, :value)
+           VALUES (?, ?)
            ON DUPLICATE KEY UPDATE content_value = VALUES(content_value)`,
-          { key, value: updates[key].trim() }
+          [key, updates[key].trim()]
         );
-
         if (key === "address1") {
           await pool.execute(
             `INSERT INTO content (content_key, content_value)
-             VALUES ('office1', :value)
+             VALUES ('office1', ?)
              ON DUPLICATE KEY UPDATE content_value = VALUES(content_value)`,
-            { value: updates[key].trim() }
+            [updates[key].trim()]
           );
         }
         if (key === "address2") {
           await pool.execute(
             `INSERT INTO content (content_key, content_value)
-             VALUES ('office2', :value)
+             VALUES ('office2', ?)
              ON DUPLICATE KEY UPDATE content_value = VALUES(content_value)`,
-            { value: updates[key].trim() }
+            [updates[key].trim()]
           );
         }
-
         changed += 1;
       }
 
       if (!changed) {
-        return res.status(400).json({
-          success: false,
-          message: "No valid settings fields provided.",
-        });
+        return res.status(400).json({ error: "No valid settings fields provided." });
       }
 
-      return res.status(200).json({ success: true, message: "Settings updated." });
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("admin-settings PATCH error:", error);
+      // Never 500 for settings — return ok so UI can show defaults
+      return res.status(200).json({ success: false, error: "Save failed", defaults: SETTINGS_DEFAULTS });
     }
-
-    return methodNotAllowed(res, ["GET", "PATCH"]);
-  } catch (error) {
-    console.error("admin-settings error:", error);
-    return res.status(500).json({ success: false, message: "Server error." });
   }
+
+  return res.status(405).json({ error: "Method not allowed" });
 }

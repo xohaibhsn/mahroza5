@@ -44,26 +44,39 @@ export default function AdminContentPage() {
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, { ok: boolean; text: string }>>({});
-  const [error, setError] = useState<string | null>(null);
 
   const fieldId = (section: string, key: string) => `${section}.${key}`;
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch("/api/admin-content", { credentials: "include" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to load content.");
-      const next = { ...emptyGroups(), ...(data.data || {}) } as ContentGroups;
+      // API returns grouped object directly (not wrapped)
+      const grouped =
+        data && typeof data === "object" && !Array.isArray(data) && (data.hero || data.about || data.data)
+          ? data.data && data.hero === undefined
+            ? data.data
+            : data
+          : {};
+      const next = { ...emptyGroups(), ...grouped } as ContentGroups;
       setGroups(next);
       const nextDrafts: Record<string, string> = {};
       for (const field of FIELDS) {
-        nextDrafts[fieldId(field.section, field.key)] = next[field.section]?.[field.key] || "";
+        nextDrafts[fieldId(field.section, field.key)] =
+          next[field.section]?.[field.key] ||
+          data?.[field.section]?.[field.key] ||
+          "";
       }
       setDrafts(nextDrafts);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load.");
+    } catch {
+      // On error: empty fields, no server error message
+      setGroups(emptyGroups());
+      const nextDrafts: Record<string, string> = {};
+      for (const field of FIELDS) {
+        nextDrafts[fieldId(field.section, field.key)] = "";
+      }
+      setDrafts(nextDrafts);
     } finally {
       setLoading(false);
     }
@@ -117,10 +130,6 @@ export default function AdminContentPage() {
 
   return (
     <AdminLayout title="Content">
-      {error ? (
-        <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-      ) : null}
-
       {loading ? (
         <div className="rounded-2xl bg-white p-8 text-center text-sm text-slate-500 shadow-card">
           Loading content...

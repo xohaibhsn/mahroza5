@@ -34,8 +34,8 @@ export default function AdminAppointmentsPage() {
       const qs = status === "all" ? "" : `?status=${status}`;
       const res = await fetch(`/api/admin-appointments${qs}`, { credentials: "include" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to load appointments.");
-      setRows(data.data || []);
+      if (!res.ok) throw new Error(data.error || data.message || "Failed to load appointments.");
+      setRows(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load.");
     } finally {

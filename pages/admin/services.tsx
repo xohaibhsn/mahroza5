@@ -51,10 +51,12 @@ export default function AdminServicesPage() {
     try {
       const res = await fetch("/api/admin-services", { credentials: "include" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to load services.");
-      setRows(data.data || []);
+      if (!res.ok) throw new Error(data.error || data.message || "Failed to load services.");
+      // API returns a raw array
+      setRows(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load.");
+      setRows([]);
     } finally {
       setLoading(false);
     }

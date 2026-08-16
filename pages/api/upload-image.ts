@@ -3,7 +3,8 @@ import { v2 as cloudinary } from "cloudinary";
 import formidable from "formidable";
 import type { Fields, Files } from "formidable";
 import fs from "fs";
-import { methodNotAllowed, requireAdmin } from "@/lib/adminAuth";
+import { methodNotAllowed } from "@/lib/adminAuth";
+import { requireAdminJwt } from "@/lib/adminApiAuth";
 
 export const config = {
   api: {
@@ -47,8 +48,7 @@ function parseForm(req: NextApiRequest): Promise<{ fields: Fields; files: Files 
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const admin = requireAdmin(req, res);
-  if (!admin) return;
+  if (!requireAdminJwt(req, res)) return;
 
   if (req.method !== "POST") {
     return methodNotAllowed(res, ["POST"]);

@@ -22,8 +22,8 @@ export default function AdminMessagesPage() {
     try {
       const res = await fetch("/api/admin-messages", { credentials: "include" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to load messages.");
-      setRows(data.data || []);
+      if (!res.ok) throw new Error(data.error || data.message || "Failed to load messages.");
+      setRows(Array.isArray(data) ? data : data.data || []);
       window.dispatchEvent(new Event("admin-messages-updated"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load.");
