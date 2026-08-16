@@ -191,6 +191,10 @@ export async function ensureAdminSchema() {
     ["settings", "favicon_url", ""],
     ["settings", "site_title", "QHC - Quality Health Care"],
     ["settings", "meta_description", "Professional home healthcare services in Lahore"],
+    ["settings", "facebook_url", ""],
+    ["settings", "instagram_url", ""],
+    ["settings", "twitter_url", ""],
+    ["settings", "tiktok_url", ""],
     [
       "hero",
       "slide_1",

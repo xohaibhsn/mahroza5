@@ -22,6 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       email: map.email || "info@qhcare.com.pk",
       site_title: map.site_title || "QHC - Quality Health Care",
       meta_description: map.meta_description || "Professional home healthcare services in Lahore",
+      facebook_url: (map.facebook_url || "").trim(),
+      instagram_url: (map.instagram_url || "").trim(),
+      twitter_url: (map.twitter_url || "").trim(),
+      tiktok_url: (map.tiktok_url || "").trim(),
     };
 
     const slides = [
@@ -55,6 +59,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         email: settings.email,
         site_title: settings.site_title,
         meta_description: settings.meta_description,
+        facebook_url: settings.facebook_url,
+        instagram_url: settings.instagram_url,
+        twitter_url: settings.twitter_url,
+        tiktok_url: settings.tiktok_url,
         hero_heading: grouped.hero.heading,
         hero_subheading: grouped.hero.subheading,
         hero_button_text: grouped.hero.button_text,
@@ -78,6 +86,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         address1: "817, Al Hafeez Shopping Mall, Gulberg, Lahore",
         address2: "Office #5, Bismillah Plaza, Defense Road, Lahore",
         email: "info@qhcare.com.pk",
+        facebook_url: "",
+        instagram_url: "",
+        twitter_url: "",
+        tiktok_url: "",
       },
       hero: {
         heading: "Care You Can Trust",

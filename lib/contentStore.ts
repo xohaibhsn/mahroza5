@@ -22,6 +22,10 @@ const FLAT_TO_SECTION_KEY: Record<string, { section: string; key: string }> = {
   favicon_url: { section: "settings", key: "favicon_url" },
   site_title: { section: "settings", key: "site_title" },
   meta_description: { section: "settings", key: "meta_description" },
+  facebook_url: { section: "settings", key: "facebook_url" },
+  instagram_url: { section: "settings", key: "instagram_url" },
+  twitter_url: { section: "settings", key: "twitter_url" },
+  tiktok_url: { section: "settings", key: "tiktok_url" },
   about_text: { section: "about", key: "description" },
 };
 
@@ -103,7 +107,16 @@ export async function upsertFlatContent(flatKey: string, value: string): Promise
 
 /** Ensure logo/favicon keys exist even if older DBs never seeded them */
 export async function ensureSettingsKeys(
-  keys: string[] = ["logo_url", "favicon_url", "site_title", "meta_description"]
+  keys: string[] = [
+    "logo_url",
+    "favicon_url",
+    "site_title",
+    "meta_description",
+    "facebook_url",
+    "instagram_url",
+    "twitter_url",
+    "tiktok_url",
+  ]
 ) {
   const pool = getPool();
   for (const key of keys) {

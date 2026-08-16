@@ -39,4 +39,8 @@ export type SiteContent = {
   favicon_url: string;
   site_title: string;
   meta_description: string;
+  facebook_url: string;
+  instagram_url: string;
+  twitter_url: string;
+  tiktok_url: string;
 };

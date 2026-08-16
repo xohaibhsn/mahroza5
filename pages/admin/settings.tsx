@@ -10,6 +10,10 @@ type SettingsForm = {
   address1: string;
   address2: string;
   email: string;
+  facebook_url: string;
+  instagram_url: string;
+  twitter_url: string;
+  tiktok_url: string;
   logo_url: string;
   favicon_url: string;
 };
@@ -23,6 +27,10 @@ const defaults: SettingsForm = {
   address1: "817, Al Hafeez Shopping Mall, Gulberg, Lahore",
   address2: "Office #5, Bismillah Plaza, Defense Road, Lahore",
   email: "info@qhcare.com.pk",
+  facebook_url: "",
+  instagram_url: "",
+  twitter_url: "",
+  tiktok_url: "",
   logo_url: "",
   favicon_url: "",
 };
@@ -73,6 +81,10 @@ export default function AdminSettingsPage() {
       address1: raw.address1 || raw.address_1 || defaults.address1,
       address2: raw.address2 || raw.address_2 || defaults.address2,
       email: raw.email || defaults.email,
+      facebook_url: String(raw.facebook_url || "").trim(),
+      instagram_url: String(raw.instagram_url || "").trim(),
+      twitter_url: String(raw.twitter_url || "").trim(),
+      tiktok_url: String(raw.tiktok_url || "").trim(),
       logo_url: String(raw.logo_url || "").trim(),
       favicon_url: String(raw.favicon_url || "").trim(),
     });
@@ -169,6 +181,10 @@ export default function AdminSettingsPage() {
     { key: "address1", label: "Address 1" },
     { key: "address2", label: "Address 2" },
     { key: "email", label: "Email" },
+    { key: "facebook_url", label: "Facebook URL" },
+    { key: "instagram_url", label: "Instagram URL" },
+    { key: "twitter_url", label: "Twitter / X URL" },
+    { key: "tiktok_url", label: "TikTok URL" },
   ];
 
   return (

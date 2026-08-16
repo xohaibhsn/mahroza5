@@ -38,6 +38,10 @@ const defaultContent: SiteContent = {
   site_title: "QHC — Quality Health Care | Lahore",
   meta_description:
     "QHC provides professional home nursing, physiotherapy, doctor visits, diagnostics, elderly care, and baby care across Lahore, Pakistan.",
+  facebook_url: "",
+  instagram_url: "",
+  twitter_url: "",
+  tiktok_url: "",
 };
 
 async function seedCatalogIfEmpty() {
@@ -174,6 +178,10 @@ function mapContent(map: Record<string, string>): SiteContent {
     favicon_url: map.favicon_url || "",
     site_title: map.site_title || defaultContent.site_title,
     meta_description: map.meta_description || defaultContent.meta_description,
+    facebook_url: map.facebook_url || "",
+    instagram_url: map.instagram_url || "",
+    twitter_url: map.twitter_url || "",
+    tiktok_url: map.tiktok_url || "",
   };
 }
 

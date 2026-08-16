@@ -12,6 +12,10 @@ const SETTINGS_DEFAULTS = {
   email: "info@qhcare.com.pk",
   logo_url: "",
   favicon_url: "",
+  facebook_url: "",
+  instagram_url: "",
+  twitter_url: "",
+  tiktok_url: "",
 };
 
 const SETTINGS_KEYS = Object.keys(SETTINGS_DEFAULTS) as Array<keyof typeof SETTINGS_DEFAULTS>;
@@ -30,6 +34,10 @@ async function readSettings() {
     email: map.email || SETTINGS_DEFAULTS.email,
     logo_url: (map.logo_url || "").trim(),
     favicon_url: (map.favicon_url || "").trim(),
+    facebook_url: (map.facebook_url || "").trim(),
+    instagram_url: (map.instagram_url || "").trim(),
+    twitter_url: (map.twitter_url || "").trim(),
+    tiktok_url: (map.tiktok_url || "").trim(),
   };
 }
 

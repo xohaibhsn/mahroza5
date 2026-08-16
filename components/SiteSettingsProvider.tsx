@@ -41,6 +41,10 @@ const defaultSettings: SiteContent = {
   site_title: "QHC — Quality Health Care | Lahore",
   meta_description:
     "QHC provides professional home nursing, physiotherapy, doctor visits, diagnostics, elderly care, and baby care across Lahore, Pakistan.",
+  facebook_url: "",
+  instagram_url: "",
+  twitter_url: "",
+  tiktok_url: "",
 };
 
 const SiteSettingsContext = createContext<SiteSettingsContextValue>({
@@ -79,6 +83,10 @@ export default function SiteSettingsProvider({ children }: { children: ReactNode
         site_title: settingsBlock.site_title ?? flat.site_title ?? prev.site_title,
         meta_description:
           settingsBlock.meta_description ?? flat.meta_description ?? prev.meta_description,
+        facebook_url: settingsBlock.facebook_url ?? flat.facebook_url ?? prev.facebook_url,
+        instagram_url: settingsBlock.instagram_url ?? flat.instagram_url ?? prev.instagram_url,
+        twitter_url: settingsBlock.twitter_url ?? flat.twitter_url ?? prev.twitter_url,
+        tiktok_url: settingsBlock.tiktok_url ?? flat.tiktok_url ?? prev.tiktok_url,
         hero_heading: data.hero?.heading ?? flat.hero_heading ?? prev.hero_heading,
         hero_subheading: data.hero?.subheading ?? flat.hero_subheading ?? prev.hero_subheading,
         hero_button_text: data.hero?.button_text ?? flat.hero_button_text ?? prev.hero_button_text,
