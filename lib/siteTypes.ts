@@ -37,6 +37,7 @@ export type SiteContent = {
   email: string;
   logo_url: string;
   favicon_url: string;
+  og_image_url: string;
   site_title: string;
   meta_description: string;
   facebook_url: string;

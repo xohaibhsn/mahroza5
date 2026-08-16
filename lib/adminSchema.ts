@@ -189,6 +189,7 @@ export async function ensureAdminSchema() {
     ["settings", "email", "info@qhcare.com.pk"],
     ["settings", "logo_url", ""],
     ["settings", "favicon_url", ""],
+    ["settings", "og_image_url", ""],
     ["settings", "site_title", "QHC - Quality Health Care"],
     ["settings", "meta_description", "Professional home healthcare services in Lahore"],
     ["settings", "facebook_url", ""],

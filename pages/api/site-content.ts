@@ -15,6 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const settings = {
       logo_url: (map.logo_url || "").trim(),
       favicon_url: (map.favicon_url || "").trim(),
+      og_image_url: (map.og_image_url || "").trim(),
       phone: map.phone || "+92 3004334065",
       whatsapp: map.whatsapp || map.phone || "+92 3004334065",
       address1: map.address1 || map.office1 || "817, Al Hafeez Shopping Mall, Gulberg, Lahore",
@@ -52,6 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ...map,
         logo_url: settings.logo_url,
         favicon_url: settings.favicon_url,
+        og_image_url: settings.og_image_url,
         phone: settings.phone,
         whatsapp: settings.whatsapp,
         address1: settings.address1,
@@ -81,6 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       settings: {
         logo_url: "",
         favicon_url: "",
+        og_image_url: "",
         phone: "+92 3004334065",
         whatsapp: "+92 3004334065",
         address1: "817, Al Hafeez Shopping Mall, Gulberg, Lahore",

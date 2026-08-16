@@ -20,6 +20,7 @@ const FLAT_TO_SECTION_KEY: Record<string, { section: string; key: string }> = {
   email: { section: "settings", key: "email" },
   logo_url: { section: "settings", key: "logo_url" },
   favicon_url: { section: "settings", key: "favicon_url" },
+  og_image_url: { section: "settings", key: "og_image_url" },
   site_title: { section: "settings", key: "site_title" },
   meta_description: { section: "settings", key: "meta_description" },
   facebook_url: { section: "settings", key: "facebook_url" },
@@ -110,6 +111,7 @@ export async function ensureSettingsKeys(
   keys: string[] = [
     "logo_url",
     "favicon_url",
+    "og_image_url",
     "site_title",
     "meta_description",
     "facebook_url",

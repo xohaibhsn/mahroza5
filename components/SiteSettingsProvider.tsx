@@ -38,6 +38,7 @@ const defaultSettings: SiteContent = {
   email: "info@qhcare.com.pk",
   logo_url: "",
   favicon_url: "",
+  og_image_url: "",
   site_title: "QHC — Quality Health Care | Lahore",
   meta_description:
     "QHC provides professional home nursing, physiotherapy, doctor visits, diagnostics, elderly care, and baby care across Lahore, Pakistan.",
@@ -75,6 +76,7 @@ export default function SiteSettingsProvider({ children }: { children: ReactNode
         ...flat,
         logo_url: settingsBlock.logo_url ?? flat.logo_url ?? prev.logo_url,
         favicon_url: settingsBlock.favicon_url ?? flat.favicon_url ?? prev.favicon_url,
+        og_image_url: settingsBlock.og_image_url ?? flat.og_image_url ?? prev.og_image_url,
         phone: settingsBlock.phone ?? flat.phone ?? prev.phone,
         whatsapp: settingsBlock.whatsapp ?? flat.whatsapp ?? prev.whatsapp,
         address1: settingsBlock.address1 ?? flat.address1 ?? prev.address1,

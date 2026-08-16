@@ -16,6 +16,7 @@ type SettingsForm = {
   tiktok_url: string;
   logo_url: string;
   favicon_url: string;
+  og_image_url: string;
 };
 
 const defaults: SettingsForm = {
@@ -33,6 +34,7 @@ const defaults: SettingsForm = {
   tiktok_url: "",
   logo_url: "",
   favicon_url: "",
+  og_image_url: "",
 };
 
 async function uploadImage(file: File, folder: string) {
@@ -69,7 +71,7 @@ export default function AdminSettingsPage() {
   const [form, setForm] = useState<SettingsForm>(defaults);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState<"logo" | "favicon" | null>(null);
+  const [uploading, setUploading] = useState<"logo" | "favicon" | "og" | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   const applyRaw = (raw: Record<string, string>) => {
@@ -87,6 +89,7 @@ export default function AdminSettingsPage() {
       tiktok_url: String(raw.tiktok_url || "").trim(),
       logo_url: String(raw.logo_url || "").trim(),
       favicon_url: String(raw.favicon_url || "").trim(),
+      og_image_url: String(raw.og_image_url || "").trim(),
     });
   };
 
@@ -146,22 +149,26 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const onUpload = async (kind: "logo" | "favicon", file: File) => {
+  const onUpload = async (kind: "logo" | "favicon" | "og", file: File) => {
     setUploading(kind);
     setMessage(null);
-    const key = kind === "logo" ? "logo_url" : "favicon_url";
+    const key =
+      kind === "logo" ? "logo_url" : kind === "favicon" ? "favicon_url" : "og_image_url";
+    const folder =
+      kind === "logo" ? "qhcare/logo" : kind === "favicon" ? "qhcare/favicon" : "qhcare/og";
     try {
-      // 1) Upload to Cloudinary
-      const url = await uploadImage(file, kind === "logo" ? "qhcare/logo" : "qhcare/favicon");
+      const url = await uploadImage(file, folder);
       setForm((f) => ({ ...f, [key]: url }));
 
-      // 2) Persist URL in database (required for public site)
       const data = await saveSettings({ [key]: url });
       applyRaw((data.data || data) as Record<string, string>);
 
       setMessage({
         ok: true,
-        text: `${kind.toUpperCase()} saved to database. Hard-refresh website (Ctrl+F5) to see it.`,
+        text:
+          kind === "og"
+            ? "Share / OG image saved. WhatsApp preview may take a few minutes to refresh."
+            : `${kind.toUpperCase()} saved to database. Hard-refresh website (Ctrl+F5) to see it.`,
       });
     } catch (err) {
       setMessage({
@@ -309,6 +316,53 @@ export default function AdminSettingsPage() {
                 <p className="mt-2 text-xs text-red-600">No favicon in database yet.</p>
               )}
             </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              WhatsApp / Social Share Image (Open Graph)
+            </label>
+            <ImageSizeHint
+              size="1200 × 630 px"
+              note="JPG/PNG landscape — shows as thumbnail when link is shared on WhatsApp, Facebook, etc."
+            />
+            <p className="mb-2 text-xs text-slate-500">
+              Professionally called Open Graph image (og:image) / link preview image. If empty, logo is used as fallback.
+            </p>
+            <input
+              type="file"
+              accept="image/*"
+              disabled={uploading === "og"}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onUpload("og", file);
+              }}
+            />
+            {uploading === "og" ? (
+              <p className="mt-2 text-xs text-secondary">Uploading &amp; saving share image...</p>
+            ) : null}
+            {form.og_image_url ? (
+              <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={form.og_image_url}
+                  alt="Share preview"
+                  className="h-28 w-full max-w-md rounded object-cover"
+                />
+                <p className="mt-2 break-all text-[11px] text-slate-600">{form.og_image_url}</p>
+                <button
+                  type="button"
+                  className="mt-2 text-xs font-semibold text-secondary"
+                  onClick={() => saveOne("og_image_url")}
+                >
+                  Re-save share image URL to database
+                </button>
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-amber-700">
+                No share image yet — WhatsApp will fall back to logo (if set).
+              </p>
+            )}
           </div>
 
           {message ? (
