@@ -72,10 +72,10 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
       <section className="relative overflow-hidden bg-hero-glow text-white">
         <div className="container-page relative grid items-center gap-10 py-16 lg:grid-cols-2 lg:py-20">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-secondary-light">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/90">
               Home Healthcare · Lahore
             </p>
-            <h1 className="mt-4 text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="mt-4 text-5xl font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
               QHC
             </h1>
             <p className="mt-2 text-2xl font-semibold text-white/95 sm:text-3xl">

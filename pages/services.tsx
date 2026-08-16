@@ -38,8 +38,8 @@ export default function ServicesPage({ services }: ServicesPageProps) {
 
       <section className="bg-white py-16 sm:py-20">
         <div className="container-page rounded-3xl bg-primary p-8 text-white sm:p-10">
-          <h3 className="font-display text-2xl font-semibold">Need help choosing a service?</h3>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/75">
+          <h3 className="font-display text-2xl font-semibold text-white">Need help choosing a service?</h3>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/90">
             Speak with our team and we will recommend the right support for your family.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">

@@ -76,8 +76,8 @@ export default function AboutPage({ content }: AboutPageProps) {
 
       <section className="py-16 sm:py-20">
         <div className="container-page rounded-3xl bg-primary px-6 py-12 text-center text-white sm:px-12">
-          <h2 className="font-display text-3xl font-semibold sm:text-4xl">Meet our director</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-white/80">
+          <h2 className="font-display text-3xl font-semibold text-white sm:text-4xl">Meet our director</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-white/90">
             {company.director} leads QHC with a focus on clinical quality, respectful caregiving,
             and making home healthcare simple for Lahore families.
           </p>

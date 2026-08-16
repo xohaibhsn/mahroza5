@@ -14,10 +14,10 @@ export default function PageHero({ title, subtitle }: PageHeroProps) {
         }}
       />
       <div className="container-page relative">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-secondary-light">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/90">
           QHC · Quality Health Care
         </p>
-        <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+        <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
           {title}
         </h1>
         {subtitle ? (

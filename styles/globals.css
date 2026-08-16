@@ -64,3 +64,26 @@ h6 {
     text-wrap: balance;
   }
 }
+
+/* Hero slider — reliable height on mobile (fade effect removed) */
+.hero-slider .swiper,
+.hero-slider .swiper-slide {
+  height: 100%;
+}
+
+.hero-slider .swiper-pagination-bullet {
+  background: #ffffff;
+  opacity: 0.45;
+}
+
+.hero-slider .swiper-pagination-bullet-active {
+  background: #4a90d9;
+  opacity: 1;
+}
+
+/* Dark surfaces: force readable white text (overrides inherited body color) */
+.bg-primary :is(h1, h2, h3, h4, h5, h6),
+.bg-primary-dark :is(h1, h2, h3, h4, h5, h6),
+.bg-hero-glow :is(h1, h2, h3, h4, h5, h6) {
+  color: #ffffff;
+}

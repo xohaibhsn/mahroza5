@@ -72,7 +72,7 @@ export default function Navbar() {
           ) : ready ? (
             <span className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
               QHC{" "}
-              <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-secondary-light sm:text-sm">
+              <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-white/85 sm:text-sm">
                 Quality Health Care
               </span>
             </span>
@@ -140,7 +140,7 @@ export default function Navbar() {
           ))}
           <a
             href={`tel:${phoneToTel(phone)}`}
-            className="rounded-md px-3 py-3 text-base font-medium text-secondary-light"
+            className="rounded-md px-3 py-3 text-base font-medium text-white"
           >
             Call {phone}
           </a>
