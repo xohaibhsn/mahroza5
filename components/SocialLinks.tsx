@@ -38,6 +38,11 @@ const icons = {
   ),
 };
 
+const activeClass =
+  "flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white transition hover:border-secondary hover:bg-secondary";
+const idleClass =
+  "flex h-10 w-10 cursor-default items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/35";
+
 export default function SocialLinks({
   facebook_url,
   instagram_url,
@@ -45,44 +50,54 @@ export default function SocialLinks({
   tiktok_url,
   whatsapp,
   className = "",
-  iconClassName = "flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white/90 transition hover:bg-secondary hover:text-white",
+  iconClassName,
 }: SocialLinksProps) {
+  const whatsappHref = whatsapp ? phoneToWhatsApp(whatsapp) : "";
+
   const items = [
     { label: "Facebook", href: String(facebook_url || "").trim(), icon: icons.Facebook },
     { label: "Instagram", href: String(instagram_url || "").trim(), icon: icons.Instagram },
     { label: "Twitter", href: String(twitter_url || "").trim(), icon: icons.Twitter },
     { label: "TikTok", href: String(tiktok_url || "").trim(), icon: icons.TikTok },
-  ].filter((item) => item.href);
-
-  const whatsappHref = whatsapp ? phoneToWhatsApp(whatsapp) : "";
-
-  if (!items.length && !whatsappHref) return null;
+    { label: "WhatsApp", href: whatsappHref, icon: icons.WhatsApp },
+  ];
 
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-      {items.map((item) => (
-        <a
-          key={item.label}
-          href={item.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={item.label}
-          className={iconClassName}
-        >
-          {item.icon}
-        </a>
-      ))}
-      {whatsappHref ? (
-        <a
-          href={whatsappHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="WhatsApp"
-          className={iconClassName}
-        >
-          {icons.WhatsApp}
-        </a>
-      ) : null}
+      {items.map((item) => {
+        const live = Boolean(item.href);
+        const base = iconClassName || (live ? activeClass : idleClass);
+        const classNameFinal = iconClassName
+          ? `${iconClassName} ${live ? "" : "pointer-events-none cursor-default opacity-40"}`.trim()
+          : base;
+
+        if (live) {
+          return (
+            <a
+              key={item.label}
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={item.label}
+              className={classNameFinal}
+            >
+              {item.icon}
+            </a>
+          );
+        }
+
+        return (
+          <span
+            key={item.label}
+            role="img"
+            aria-label={`${item.label} (link coming soon)`}
+            title={`${item.label} — add link in Admin Settings`}
+            className={classNameFinal}
+          >
+            {item.icon}
+          </span>
+        );
+      })}
     </div>
   );
 }
