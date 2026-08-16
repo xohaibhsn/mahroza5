@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import AppointmentForm from "@/components/AppointmentForm";
 import Layout from "@/components/Layout";
+import SeoHead, { seoFromContent } from "@/components/SeoHead";
 import ServiceCard from "@/components/ServiceCard";
 import type { SiteContent, SiteService, SiteTestimonial } from "@/lib/siteTypes";
 
@@ -61,6 +62,7 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
 
   return (
     <Layout>
+      <SeoHead {...seoFromContent(content)} url="https://qhcare.com.pk" />
       <Head>
         <title>QHC — Quality Health Care | {content.hero_heading} | Lahore</title>
         <meta

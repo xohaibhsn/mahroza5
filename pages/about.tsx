@@ -2,6 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
+import SeoHead, { seoFromContent } from "@/components/SeoHead";
 import { company, whyChooseUs } from "@/lib/constants";
 import type { SiteContent } from "@/lib/siteTypes";
 
@@ -12,6 +13,11 @@ type AboutPageProps = {
 export default function AboutPage({ content }: AboutPageProps) {
   return (
     <Layout>
+      <SeoHead
+        {...seoFromContent(content)}
+        title="About Us | QHC — Quality Health Care Lahore"
+        url="https://qhcare.com.pk/about"
+      />
       <Head>
         <title>About Us | QHC — Quality Health Care Lahore</title>
         <meta

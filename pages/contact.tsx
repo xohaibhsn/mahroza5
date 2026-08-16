@@ -2,6 +2,7 @@ import Head from "next/head";
 import ContactForm from "@/components/ContactForm";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
+import SeoHead, { seoFromContent } from "@/components/SeoHead";
 import type { SiteContent } from "@/lib/siteTypes";
 
 function phoneToTel(phone: string) {
@@ -21,6 +22,11 @@ type ContactPageProps = {
 export default function ContactPage({ content }: ContactPageProps) {
   return (
     <Layout>
+      <SeoHead
+        {...seoFromContent(content)}
+        title="Contact | QHC — Quality Health Care Lahore"
+        url="https://qhcare.com.pk/contact"
+      />
       <Head>
         <title>Contact | QHC — Quality Health Care Lahore</title>
         <meta

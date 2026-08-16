@@ -2,11 +2,22 @@ import Head from "next/head";
 import AppointmentForm from "@/components/AppointmentForm";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
+import SeoHead, { seoFromContent } from "@/components/SeoHead";
 import { company, services } from "@/lib/constants";
+import type { SiteContent } from "@/lib/siteTypes";
 
-export default function AppointmentPage() {
+type AppointmentPageProps = {
+  content: SiteContent;
+};
+
+export default function AppointmentPage({ content }: AppointmentPageProps) {
   return (
     <Layout>
+      <SeoHead
+        {...seoFromContent(content)}
+        title="Book Appointment | QHC — Quality Health Care"
+        url="https://qhcare.com.pk/appointment"
+      />
       <Head>
         <title>Book Appointment | QHC — Quality Health Care</title>
         <meta
@@ -67,4 +78,10 @@ export default function AppointmentPage() {
       </section>
     </Layout>
   );
+}
+
+export async function getServerSideProps() {
+  const { getSiteContent } = await import("@/lib/siteData");
+  const content = await getSiteContent();
+  return { props: { content } };
 }

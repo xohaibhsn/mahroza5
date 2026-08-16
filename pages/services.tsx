@@ -2,17 +2,24 @@ import Head from "next/head";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
+import SeoHead, { seoFromContent } from "@/components/SeoHead";
 import ServiceCard from "@/components/ServiceCard";
 import { company } from "@/lib/constants";
-import type { SiteService } from "@/lib/siteTypes";
+import type { SiteContent, SiteService } from "@/lib/siteTypes";
 
 type ServicesPageProps = {
   services: SiteService[];
+  content: SiteContent;
 };
 
-export default function ServicesPage({ services }: ServicesPageProps) {
+export default function ServicesPage({ services, content }: ServicesPageProps) {
   return (
     <Layout>
+      <SeoHead
+        {...seoFromContent(content)}
+        title="Services | QHC — Home Healthcare in Lahore"
+        url="https://qhcare.com.pk/services"
+      />
       <Head>
         <title>Services | QHC — Home Healthcare in Lahore</title>
         <meta
@@ -57,7 +64,7 @@ export default function ServicesPage({ services }: ServicesPageProps) {
 }
 
 export async function getServerSideProps() {
-  const { getActiveServices } = await import("@/lib/siteData");
-  const services = await getActiveServices();
-  return { props: { services } };
+  const { getActiveServices, getSiteContent } = await import("@/lib/siteData");
+  const [services, content] = await Promise.all([getActiveServices(), getSiteContent()]);
+  return { props: { services, content } };
 }
