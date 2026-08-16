@@ -1,7 +1,7 @@
 import Link from "next/link";
 import SocialLinks from "@/components/SocialLinks";
 import { useSiteSettings } from "@/components/SiteSettingsProvider";
-import { company, navLinks, services } from "@/lib/constants";
+import { company, navLinks } from "@/lib/constants";
 import { phoneToTel } from "@/lib/siteDataClient";
 
 export default function Footer() {
@@ -14,61 +14,8 @@ export default function Footer() {
 
   return (
     <footer className="bg-primary text-white">
-      <div className="border-b border-white/15 bg-primary-dark">
-        <div className="container-page flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-3 text-sm text-white/90">
-            <a
-              href={`tel:${phoneToTel(phone)}`}
-              className="inline-flex items-center gap-2 text-white transition hover:text-white"
-            >
-              <svg
-                className="h-4 w-4 shrink-0 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 5a2 2 0 012-2h3.3a1 1 0 01.95.68l1.2 3.5a1 1 0 01-.3 1.1L8.9 10.3a11 11 0 005 5l1.9-1.3a1 1 0 011.1-.1l3.5 1.2a1 1 0 01.7.95V19a2 2 0 01-2 2h-.5C9.6 21 3 14.4 3 6.5V6a1 1 0 010-1z"
-                />
-              </svg>
-              <span className="font-semibold text-white">{phone}</span>
-            </a>
-            <div className="inline-flex items-start gap-2 text-white/90">
-              <svg
-                className="mt-0.5 h-4 w-4 shrink-0 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17.7 16.7A8 8 0 1 0 6.3 16.7L12 22l5.7-5.3z"
-                />
-                <circle cx="12" cy="10" r="2.5" />
-              </svg>
-              <div className="space-y-1 leading-relaxed text-white/90">
-                <p>{address1}</p>
-                <p>{address2}</p>
-              </div>
-            </div>
-          </div>
-
-          <SocialLinks
-            facebook_url={settings.facebook_url}
-            instagram_url={settings.instagram_url}
-            twitter_url={settings.twitter_url}
-            tiktok_url={settings.tiktok_url}
-            whatsapp={settings.whatsapp || phone}
-          />
-        </div>
-      </div>
-
-      <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-4">
+      <div className="container-page grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-3 lg:gap-12 lg:py-14">
+        {/* Brand + social */}
         <div>
           <Link href="/" className="inline-flex items-center gap-2">
             {settings.logo_url ? (
@@ -76,29 +23,33 @@ export default function Footer() {
               <img
                 src={settings.logo_url}
                 alt="QHC logo"
-                className="h-10 w-auto max-w-[160px] object-contain"
+                className="h-11 w-auto max-w-[180px] object-contain"
               />
             ) : (
-              <span className="font-display text-3xl font-semibold text-white">QHC</span>
+              <span className="text-2xl font-semibold tracking-tight text-white">QHC</span>
             )}
           </Link>
-          <p className="mt-1 text-sm font-medium uppercase tracking-[0.16em] text-white/80">
-            {company.fullName}
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/85">
+            {company.fullName} — {company.tagline}. Home healthcare across Lahore under Director{" "}
+            {company.director}.
           </p>
-          <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/85">
-            {company.tagline}. Professional home healthcare services across Lahore — nursing,
-            diagnostics, elderly care, and more.
-          </p>
-          <p className="mt-4 text-sm text-white/80">
-            Director: <span className="font-semibold text-white">{company.director}</span>
-          </p>
+          <SocialLinks
+            className="mt-6"
+            facebook_url={settings.facebook_url}
+            instagram_url={settings.instagram_url}
+            twitter_url={settings.twitter_url}
+            tiktok_url={settings.tiktok_url}
+            whatsapp={settings.whatsapp || phone}
+            iconClassName="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white transition hover:border-secondary hover:bg-secondary"
+          />
         </div>
 
+        {/* Quick links */}
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
             Quick Links
           </h3>
-          <ul className="mt-4 space-y-2">
+          <ul className="mt-4 space-y-2.5">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
@@ -109,60 +60,57 @@ export default function Footer() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                href="/appointment"
+                className="text-sm font-medium text-secondary-light transition hover:text-white"
+              >
+                Book Appointment
+              </Link>
+            </li>
           </ul>
         </div>
 
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-            Services
-          </h3>
-          <ul className="mt-4 space-y-2">
-            {services.slice(0, 6).map((service) => (
-              <li key={service.id}>
-                <Link
-                  href="/services"
-                  className="text-sm text-white/85 transition hover:text-white"
-                >
-                  {service.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
+        {/* Contact (once) */}
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
             Contact
           </h3>
           <ul className="mt-4 space-y-4 text-sm text-white/85">
             <li>
-              <a href={`tel:${phoneToTel(phone)}`} className="text-white transition hover:text-white">
+              <a
+                href={`tel:${phoneToTel(phone)}`}
+                className="font-medium text-white transition hover:text-secondary-light"
+              >
                 {phone}
               </a>
             </li>
             <li>
-              <a href={`mailto:${email}`} className="text-white transition hover:text-white">
+              <a
+                href={`mailto:${email}`}
+                className="text-white/90 transition hover:text-secondary-light"
+              >
                 {email}
               </a>
             </li>
             <li>
-              <p className="font-semibold text-white">Office 1 — Gulberg</p>
-              <p className="mt-1 leading-relaxed text-white/85">{address1}</p>
+              <p className="font-medium text-white">{company.offices[0].label}</p>
+              <p className="mt-1 leading-relaxed text-white/80">{address1}</p>
             </li>
             <li>
-              <p className="font-semibold text-white">Office 2 — Defense Road</p>
-              <p className="mt-1 leading-relaxed text-white/85">{address2}</p>
+              <p className="font-medium text-white">{company.offices[1].label}</p>
+              <p className="mt-1 leading-relaxed text-white/80">{address2}</p>
             </li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-white/15">
-        <div className="container-page flex flex-col gap-2 py-5 text-center text-xs text-white/70 sm:flex-row sm:justify-between sm:text-left">
+        <div className="container-page flex flex-col gap-2 py-5 text-center text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <p>
             © {year} {company.name} — {company.fullName}. All rights reserved.
           </p>
-          <p className="text-white/70">{company.website}</p>
+          <p>{company.website}</p>
         </div>
       </div>
     </footer>
