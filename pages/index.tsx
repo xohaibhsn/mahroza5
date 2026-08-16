@@ -62,13 +62,9 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
 
   return (
     <Layout>
-      <SeoHead {...seoFromContent(content)} url="https://qhcare.com.pk" />
+      <SeoHead {...seoFromContent(content)} url="https://qhcare.com.pk/" />
       <Head>
-        <title>QHC — Quality Health Care | {content.hero_heading} | Lahore</title>
-        <meta
-          name="description"
-          content="QHC provides professional home nursing, physiotherapy, doctor visits, diagnostics, elderly care, and baby care across Lahore, Pakistan."
-        />
+        <title>{`QHC - Quality Health Care | ${content.hero_heading} | Lahore`}</title>
       </Head>
 
       <section className="relative overflow-hidden bg-hero-glow text-white">

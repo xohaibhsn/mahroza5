@@ -331,9 +331,19 @@ export default function AdminSettingsPage() {
               note="JPG/PNG landscape — shows as thumbnail when link is shared on WhatsApp, Facebook, etc."
             />
             <p className="mb-2 text-xs text-slate-500">
-              Professionally called Open Graph image (og:image) / link preview. Keep file under ~300KB
-              if possible. Site serves a compressed JPG version to WhatsApp automatically. After
-              save, test in a <strong>new</strong> WhatsApp chat (old chats cache the old preview).
+              Open Graph / link preview image for WhatsApp &amp; Facebook. After deploy, test in a{" "}
+              <strong>new</strong> chat using{" "}
+              <code className="rounded bg-slate-100 px-1">https://qhcare.com.pk/?v=2</code>. Force
+              refresh at{" "}
+              <a
+                className="font-semibold text-secondary underline"
+                href="https://developers.facebook.com/tools/debug/?q=https%3A%2F%2Fqhcare.com.pk%2F"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Facebook Sharing Debugger
+              </a>
+              .
             </p>
             <input
               type="file"
