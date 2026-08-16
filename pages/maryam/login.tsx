@@ -16,7 +16,7 @@ export default function AdminLoginPage() {
         const res = await fetch("/api/admin-auth", { credentials: "include" });
         const data = await res.json();
         if (res.ok && data.authenticated) {
-          router.replace("/admin");
+          router.replace("/maryam");
           return;
         }
       } catch {
@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
         setError(data.message || "Login failed.");
         return;
       }
-      router.replace("/admin");
+      router.replace(data.redirectTo || "/maryam");
     } catch {
       setError("Unable to reach the server.");
     } finally {

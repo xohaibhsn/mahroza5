@@ -7,13 +7,13 @@ export function requireAdminJwt(req: NextApiRequest, res: NextApiResponse): bool
     const cookies = parse(req.headers.cookie || "");
     const token = cookies.admin_token;
     if (!token) {
-      res.status(401).json({ error: "Unauthorized" });
+      res.status(401).json({ error: "Unauthorized", redirectTo: "/maryam/login" });
       return false;
     }
     verify(token, process.env.JWT_SECRET || "qhcare_jwt_secret_2024");
     return true;
   } catch {
-    res.status(401).json({ error: "Invalid token" });
+    res.status(401).json({ error: "Invalid token", redirectTo: "/maryam/login" });
     return false;
   }
 }

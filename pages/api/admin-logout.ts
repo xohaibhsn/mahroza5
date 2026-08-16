@@ -7,5 +7,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   clearAdminCookie(res);
-  return res.status(200).json({ success: true, message: "Logged out." });
+  return res.status(200).json({
+    success: true,
+    message: "Logged out.",
+    redirectTo: "/maryam/login",
+  });
 }

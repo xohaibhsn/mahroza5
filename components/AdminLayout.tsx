@@ -4,13 +4,13 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 const navItems = [
-  { href: "/admin", label: "Dashboard", exact: true },
-  { href: "/admin/appointments", label: "Appointments" },
-  { href: "/admin/services", label: "Services" },
-  { href: "/admin/testimonials", label: "Testimonials" },
-  { href: "/admin/content", label: "Content" },
-  { href: "/admin/messages", label: "Messages", badge: true },
-  { href: "/admin/settings", label: "Settings" },
+  { href: "/maryam", label: "Dashboard", exact: true },
+  { href: "/maryam/appointments", label: "Appointments" },
+  { href: "/maryam/services", label: "Services" },
+  { href: "/maryam/testimonials", label: "Testimonials" },
+  { href: "/maryam/content", label: "Content" },
+  { href: "/maryam/messages", label: "Messages", badge: true },
+  { href: "/maryam/settings", label: "Settings" },
 ] as const;
 
 type AdminLayoutProps = {
@@ -52,7 +52,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         const res = await fetch("/api/admin-auth", { credentials: "include" });
         const data = await res.json();
         if (!res.ok || !data.authenticated) {
-          router.replace("/admin/login");
+          router.replace("/maryam/login");
           return;
         }
         if (active) {
@@ -61,7 +61,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           loadUnread();
         }
       } catch {
-        router.replace("/admin/login");
+        router.replace("/maryam/login");
       }
     })();
 
@@ -78,7 +78,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   const logout = async () => {
     await fetch("/api/admin-logout", { method: "POST", credentials: "include" });
-    router.replace("/admin/login");
+    router.replace("/maryam/login");
   };
 
   const isActive = (href: string, exact?: boolean) => {

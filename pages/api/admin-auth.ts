@@ -19,12 +19,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const token = getTokenFromRequest(req);
   if (!token) {
-    return res.status(401).json({ success: false, authenticated: false });
+    return res.status(401).json({
+      success: false,
+      authenticated: false,
+      redirectTo: "/maryam/login",
+    });
   }
 
   const admin = verifyAdminToken(token) || getAdminFromRequest(req);
   if (!admin) {
-    return res.status(401).json({ success: false, authenticated: false });
+    return res.status(401).json({
+      success: false,
+      authenticated: false,
+      redirectTo: "/maryam/login",
+    });
   }
 
   return res.status(200).json({
