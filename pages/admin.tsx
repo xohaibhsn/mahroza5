@@ -1,6 +1,6 @@
 import type { GetServerSideProps } from "next";
 
-export default function AdminSlug() {
+export default function AdminRedirect() {
   return null;
 }
 
