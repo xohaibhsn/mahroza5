@@ -16,14 +16,18 @@ const SETTINGS_DEFAULTS = {
 
 const SETTINGS_KEYS = Object.keys(SETTINGS_DEFAULTS) as Array<keyof typeof SETTINGS_DEFAULTS>;
 
-function buildFromRows(
-  rows: Array<{ content_key?: string; content_value?: string | null; key?: string; value?: string | null }>
-) {
+async function readSettings() {
+  const [rows] = await pool.execute(
+    `SELECT content_key, content_value FROM content
+     WHERE content_key IN (
+       'phone','whatsapp','address1','address2','address_1','address_2',
+       'office1','office2','email','logo_url','favicon_url','site_title','meta_description'
+     )`
+  );
+
   const map: Record<string, string> = {};
-  for (const row of rows) {
-    const k = row.content_key || row.key;
-    const v = row.content_value ?? row.value;
-    if (k) map[k] = v || "";
+  for (const row of rows as Array<{ content_key: string; content_value: string | null }>) {
+    map[row.content_key] = row.content_value || "";
   }
 
   return {
@@ -44,32 +48,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === "GET") {
     try {
-      // Prefer settings section if that schema exists; otherwise use known keys
-      let rows: unknown[] = [];
-      try {
-        const [sectionRows] = await pool.execute(
-          "SELECT * FROM content WHERE section = 'settings'"
-        );
-        rows = sectionRows as unknown[];
-      } catch {
-        const [keyRows] = await pool.execute(
-          `SELECT * FROM content
-           WHERE content_key IN (
-             'phone','whatsapp','address1','address2','address_1','address_2',
-             'office1','office2','email','logo_url','favicon_url','site_title','meta_description'
-           )`
-        );
-        rows = keyRows as unknown[];
-      }
-
-      if (!rows.length) {
-        return res.status(200).json(SETTINGS_DEFAULTS);
-      }
-
-      return res.status(200).json(buildFromRows(rows as Array<Record<string, string>>));
+      const settings = await readSettings();
+      return res.status(200).json({ success: true, ...settings, data: settings });
     } catch (error) {
       console.error("admin-settings GET fallback:", error);
-      return res.status(200).json(SETTINGS_DEFAULTS);
+      return res.status(200).json({ success: true, ...SETTINGS_DEFAULTS, data: SETTINGS_DEFAULTS });
     }
   }
 
@@ -86,18 +69,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       let changed = 0;
       for (const key of SETTINGS_KEYS) {
         if (typeof updates?.[key] !== "string") continue;
+        const value = updates[key].trim();
         await pool.execute(
           `INSERT INTO content (content_key, content_value)
            VALUES (?, ?)
            ON DUPLICATE KEY UPDATE content_value = VALUES(content_value)`,
-          [key, updates[key].trim()]
+          [key, value]
         );
         if (key === "address1") {
           await pool.execute(
             `INSERT INTO content (content_key, content_value)
              VALUES ('office1', ?)
              ON DUPLICATE KEY UPDATE content_value = VALUES(content_value)`,
-            [updates[key].trim()]
+            [value]
           );
         }
         if (key === "address2") {
@@ -105,21 +89,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             `INSERT INTO content (content_key, content_value)
              VALUES ('office2', ?)
              ON DUPLICATE KEY UPDATE content_value = VALUES(content_value)`,
-            [updates[key].trim()]
+            [value]
           );
         }
         changed += 1;
       }
 
       if (!changed) {
-        return res.status(400).json({ error: "No valid settings fields provided." });
+        return res.status(400).json({ success: false, error: "No valid settings fields provided." });
       }
 
-      return res.status(200).json({ success: true });
+      const settings = await readSettings();
+      return res.status(200).json({ success: true, ...settings, data: settings });
     } catch (error) {
       console.error("admin-settings PATCH error:", error);
-      // Never 500 for settings — return ok so UI can show defaults
-      return res.status(200).json({ success: false, error: "Save failed", defaults: SETTINGS_DEFAULTS });
+      return res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Save failed",
+      });
     }
   }
 

@@ -1,28 +1,46 @@
 import { Autoplay, EffectFade } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { useEffect, useState } from "react";
+import { DEFAULT_SLIDES } from "@/lib/contentSections";
 import "swiper/css";
 import "swiper/css/effect-fade";
 
-const slides = [
-  {
-    src: "https://images.unsplash.com/photo-1643297654416-05795d62e39c?auto=format&fit=crop&w=800&q=80",
-    alt: "Female nurse with stethoscope smiling",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80",
-    alt: "Doctor visiting patient at home",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
-    alt: "Elderly care at home",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80",
-    alt: "Baby care and family healthcare",
-  },
+const slideAlts = [
+  "Female nurse with stethoscope smiling",
+  "Doctor visiting patient at home",
+  "Elderly care at home",
+  "Baby care and family healthcare",
 ];
 
 export default function HeroSlider() {
+  const [slides, setSlides] = useState<string[]>(DEFAULT_SLIDES);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/site-content");
+        const data = await res.json();
+        const fromApi = [
+          data?.hero?.slide_1,
+          data?.hero?.slide_2,
+          data?.hero?.slide_3,
+          data?.hero?.slide_4,
+        ]
+          .map((s) => String(s || "").trim())
+          .filter(Boolean);
+        if (active && fromApi.length) {
+          setSlides(fromApi.length >= 4 ? fromApi.slice(0, 4) : [...fromApi, ...DEFAULT_SLIDES].slice(0, 4));
+        }
+      } catch {
+        // keep defaults
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <div className="overflow-hidden rounded-2xl shadow-2xl">
       <Swiper
@@ -32,12 +50,12 @@ export default function HeroSlider() {
         autoplay={{ delay: 3000, disableOnInteraction: false }}
         className="h-[450px] w-full"
       >
-        {slides.map((slide) => (
-          <SwiperSlide key={slide.src}>
+        {slides.map((src, index) => (
+          <SwiperSlide key={`${src}-${index}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={slide.src}
-              alt={slide.alt}
+              src={src}
+              alt={slideAlts[index] || `Hero slide ${index + 1}`}
               className="h-[450px] w-full object-cover"
             />
           </SwiperSlide>

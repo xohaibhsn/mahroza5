@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import pool from "@/lib/db";
 
+/** Visit /api/seed-images?secret=qhcare2024 to force-update service images. */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.query.secret !== "qhcare2024") {
     return res.status(401).json({ error: "Unauthorized" });
@@ -26,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ],
       [
         "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=600&q=80",
-        "UPDATE services SET image=? WHERE title LIKE '%X-Ray%' OR title LIKE '%Ultrasound%' OR title LIKE '%ECG%'",
+        "UPDATE services SET image=? WHERE title LIKE '%X-Ray%' OR title LIKE '%Ultrasound%' OR title LIKE '%ECG%' OR title LIKE '%Diagnostic%'",
       ],
       [
         "https://images.unsplash.com/photo-1542849808-1ed9a6d0e862?auto=format&fit=crop&w=600&q=80",
@@ -48,9 +49,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       updated += Number((result as { affectedRows?: number }).affectedRows || 0);
     }
 
+    // Also seed default hero slides if empty
+    const slides = [
+      [
+        "hero_slide_1",
+        "https://images.unsplash.com/photo-1643297654416-05795d62e39c?auto=format&fit=crop&w=800&q=80",
+      ],
+      [
+        "hero_slide_2",
+        "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80",
+      ],
+      [
+        "hero_slide_3",
+        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
+      ],
+      [
+        "hero_slide_4",
+        "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80",
+      ],
+    ] as const;
+
+    for (const [key, value] of slides) {
+      await pool.execute(
+        `INSERT INTO content (content_key, content_value)
+         VALUES (?, ?)
+         ON DUPLICATE KEY UPDATE content_value = IF(content_value IS NULL OR content_value = '', VALUES(content_value), content_value)`,
+        [key, value]
+      );
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Images seeded successfully",
+      message: "Service images + hero slides seeded successfully",
       updated,
     });
   } catch (error) {

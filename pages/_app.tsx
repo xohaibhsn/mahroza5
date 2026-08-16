@@ -9,7 +9,9 @@ export default function App({ Component, pageProps }: AppProps) {
       try {
         const res = await fetch("/api/site-content");
         const data = await res.json();
-        const faviconUrl = data?.settings?.favicon_url;
+    const faviconUrl = String(
+      data?.settings?.favicon_url || data?.data?.favicon_url || ""
+    ).trim();
         if (faviconUrl) {
           let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
           if (!link) {

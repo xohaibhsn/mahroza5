@@ -18,8 +18,10 @@ export default function Navbar() {
         const res = await fetch("/api/site-content");
         const data = await res.json();
         if (!active) return;
-        setLogoUrl(data?.settings?.logo_url || "");
-        setPhone(data?.settings?.phone || company.phone);
+        setLogoUrl(
+          String(data?.settings?.logo_url || data?.data?.logo_url || "").trim()
+        );
+        setPhone(data?.settings?.phone || data?.data?.phone || company.phone);
       } catch {
         if (active) setLogoUrl("");
       } finally {

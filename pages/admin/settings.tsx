@@ -36,7 +36,7 @@ async function uploadImage(file: File, folder: string) {
     body: formData,
   });
   const data = await res.json();
-  if (!res.ok || !data.url) throw new Error(data.message || "Upload failed.");
+  if (!res.ok || !data.url) throw new Error(data.message || data.error || "Upload failed.");
   return String(data.url);
 }
 
@@ -47,27 +47,30 @@ export default function AdminSettingsPage() {
   const [uploading, setUploading] = useState<"logo" | "favicon" | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const applyRaw = (raw: Record<string, string>) => {
+    setForm({
+      site_title: raw.site_title || defaults.site_title,
+      meta_description: raw.meta_description || defaults.meta_description,
+      phone: raw.phone || defaults.phone,
+      whatsapp: raw.whatsapp || defaults.whatsapp,
+      address1: raw.address1 || raw.address_1 || defaults.address1,
+      address2: raw.address2 || raw.address_2 || defaults.address2,
+      email: raw.email || defaults.email,
+      logo_url: String(raw.logo_url || "").trim(),
+      favicon_url: String(raw.favicon_url || "").trim(),
+    });
+  };
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin-settings", { credentials: "include" });
       const data = await res.json();
-      // API returns flat object (or { data }) — never block on 500
       const raw = (data?.data && typeof data.data === "object" ? data.data : data) as Record<
         string,
         string
       >;
-      setForm({
-        site_title: raw.site_title || defaults.site_title,
-        meta_description: raw.meta_description || defaults.meta_description,
-        phone: raw.phone || defaults.phone,
-        whatsapp: raw.whatsapp || defaults.whatsapp,
-        address1: raw.address1 || raw.address_1 || defaults.address1,
-        address2: raw.address2 || raw.address_2 || defaults.address2,
-        email: raw.email || defaults.email,
-        logo_url: raw.logo_url || "",
-        favicon_url: raw.favicon_url || "",
-      });
+      applyRaw(raw);
     } catch {
       setForm(defaults);
     } finally {
@@ -91,8 +94,11 @@ export default function AdminSettingsPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Save failed.");
-      setMessage({ ok: true, text: "All settings saved." });
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || data.message || "Save failed.");
+      }
+      applyRaw((data.data || data) as Record<string, string>);
+      setMessage({ ok: true, text: "All settings saved. Logo/favicon will appear on the website." });
     } catch (err) {
       setMessage({
         ok: false,
@@ -113,7 +119,10 @@ export default function AdminSettingsPage() {
         body: JSON.stringify({ [key]: form[key] }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Save failed.");
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || data.message || "Save failed.");
+      }
+      applyRaw((data.data || data) as Record<string, string>);
       setMessage({ ok: true, text: `${key.replace(/_/g, " ")} saved.` });
     } catch (err) {
       setMessage({
@@ -130,13 +139,22 @@ export default function AdminSettingsPage() {
       const url = await uploadImage(file, kind === "logo" ? "qhcare/logo" : "qhcare/favicon");
       const key = kind === "logo" ? "logo_url" : "favicon_url";
       setForm((f) => ({ ...f, [key]: url }));
-      await fetch("/api/admin-settings", {
+
+      const res = await fetch("/api/admin-settings", {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [key]: url }),
       });
-      setMessage({ ok: true, text: `${kind} uploaded and saved.` });
+      const data = await res.json();
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || data.message || "DB save failed after upload.");
+      }
+      applyRaw((data.data || data) as Record<string, string>);
+      setMessage({
+        ok: true,
+        text: `${kind} uploaded to Cloudinary and saved to database. Refresh homepage to see it.`,
+      });
     } catch (err) {
       setMessage({
         ok: false,
@@ -206,9 +224,19 @@ export default function AdminSettingsPage() {
                   if (file) onUpload("logo", file);
                 }}
               />
+              {uploading === "logo" ? (
+                <p className="mt-2 text-xs text-secondary">Uploading logo...</p>
+              ) : null}
               {form.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={form.logo_url} alt="Logo preview" className="mt-3 h-16 object-contain" />
+                <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={form.logo_url}
+                    alt="Logo preview"
+                    className="h-16 bg-primary object-contain p-2"
+                  />
+                  <p className="mt-2 break-all text-[11px] text-slate-500">{form.logo_url}</p>
+                </div>
               ) : (
                 <p className="mt-2 text-xs text-slate-500">No logo set.</p>
               )}
@@ -224,13 +252,19 @@ export default function AdminSettingsPage() {
                   if (file) onUpload("favicon", file);
                 }}
               />
+              {uploading === "favicon" ? (
+                <p className="mt-2 text-xs text-secondary">Uploading favicon...</p>
+              ) : null}
               {form.favicon_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={form.favicon_url}
-                  alt="Favicon preview"
-                  className="mt-3 h-10 w-10 object-contain"
-                />
+                <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={form.favicon_url}
+                    alt="Favicon preview"
+                    className="h-10 w-10 object-contain"
+                  />
+                  <p className="mt-2 break-all text-[11px] text-slate-500">{form.favicon_url}</p>
+                </div>
               ) : (
                 <p className="mt-2 text-xs text-slate-500">No favicon set.</p>
               )}

@@ -62,6 +62,64 @@ async function seedCatalogIfEmpty() {
     }
   }
 
+  // Replace missing / placeholder service images with real Unsplash URLs
+  const imageSeeds: Array<[string, string]> = [
+    [
+      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80",
+      "%Nursing%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=600&q=80",
+      "%Dressing%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=600&q=80",
+      "%Injection%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80",
+      "%Physio%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80",
+      "%Doctor%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=600&q=80",
+      "%X-Ray%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=600&q=80",
+      "%Ultrasound%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=600&q=80",
+      "%ECG%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1542849808-1ed9a6d0e862?auto=format&fit=crop&w=600&q=80",
+      "%Elderly%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1527137342181-19aab11a8ee8?auto=format&fit=crop&w=600&q=80",
+      "%Mental%",
+    ],
+    [
+      "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=600&q=80",
+      "%Baby%",
+    ],
+  ];
+
+  for (const [imageUrl, pattern] of imageSeeds) {
+    await pool.execute(
+      `UPDATE services
+       SET image = :image
+       WHERE title LIKE :pattern
+         AND (image IS NULL OR image = '' OR image LIKE '%placehold.co%')`,
+      { image: imageUrl, pattern }
+    );
+  }
+
   const [testimonialCountRows] = await pool.query("SELECT COUNT(*) AS count FROM testimonials");
   const testimonialCount = Number(
     (testimonialCountRows as Array<{ count: number }>)[0]?.count || 0

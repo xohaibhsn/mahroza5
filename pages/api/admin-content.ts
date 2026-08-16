@@ -4,7 +4,15 @@ import { contentDbKey, groupContent } from "@/lib/contentSections";
 import pool from "@/lib/db";
 
 const EMPTY_CONTENT = {
-  hero: { heading: "", subheading: "", button_text: "" },
+  hero: {
+    heading: "",
+    subheading: "",
+    button_text: "",
+    slide_1: "",
+    slide_2: "",
+    slide_3: "",
+    slide_4: "",
+  },
   about: { heading: "", description: "" },
   stats: { patients: "", services: "", availability: "", city: "" },
   why_choose_us: { point_1: "", point_2: "", point_3: "", point_4: "" },

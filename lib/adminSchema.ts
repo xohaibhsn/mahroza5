@@ -194,6 +194,22 @@ export async function ensureAdminSchema() {
     ["favicon_url", ""],
     ["site_title", "QHC - Quality Health Care"],
     ["meta_description", "Professional home healthcare services in Lahore"],
+    [
+      "hero_slide_1",
+      "https://images.unsplash.com/photo-1643297654416-05795d62e39c?auto=format&fit=crop&w=800&q=80",
+    ],
+    [
+      "hero_slide_2",
+      "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80",
+    ],
+    [
+      "hero_slide_3",
+      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
+    ],
+    [
+      "hero_slide_4",
+      "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80",
+    ],
   ];
 
   for (const [key, value] of defaults) {

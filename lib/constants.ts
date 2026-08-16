@@ -45,7 +45,8 @@ export const services: ServiceItem[] = [
     short: "Male & Female",
     description:
       "Qualified male and female nurses providing professional nursing care in the comfort of your home across Lahore.",
-    image: "https://placehold.co/600x400/1e3a5f/ffffff?text=Home+Nursing",
+    image:
+      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80",
   },
   {
     id: "dressing-iv",
@@ -53,7 +54,8 @@ export const services: ServiceItem[] = [
     short: "Wound care & infusions",
     description:
       "Sterile wound dressing, IV cannulation, and injection administration by trained clinicians at your doorstep.",
-    image: "https://placehold.co/600x400/4a90d9/ffffff?text=Dressing+%26+IV",
+    image:
+      "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=600&q=80",
   },
   {
     id: "physiotherapy",
@@ -61,7 +63,8 @@ export const services: ServiceItem[] = [
     short: "Recovery & mobility",
     description:
       "Personalized physiotherapy sessions at home to restore strength, mobility, and comfort after illness or injury.",
-    image: "https://placehold.co/600x400/1e3a5f/ffffff?text=Physiotherapy",
+    image:
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=80",
   },
   {
     id: "doctor-consultation",
@@ -69,7 +72,8 @@ export const services: ServiceItem[] = [
     short: "Physician visits",
     description:
       "Experienced doctors visit your home for consultations, follow-ups, and medical advice without hospital travel.",
-    image: "https://placehold.co/600x400/4a90d9/ffffff?text=Doctor+at+Home",
+    image:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80",
   },
   {
     id: "diagnostics",
@@ -77,7 +81,8 @@ export const services: ServiceItem[] = [
     short: "Home diagnostics",
     description:
       "Portable diagnostic services including X-ray, ultrasound, and ECG conducted safely in your residence.",
-    image: "https://placehold.co/600x400/1e3a5f/ffffff?text=Diagnostics",
+    image:
+      "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=600&q=80",
   },
   {
     id: "elderly-care",
@@ -85,7 +90,8 @@ export const services: ServiceItem[] = [
     short: "Senior support",
     description:
       "Compassionate, dignified care for seniors—daily assistance, medication support, and companionship in Lahore.",
-    image: "https://placehold.co/600x400/4a90d9/ffffff?text=Elderly+Care",
+    image:
+      "https://images.unsplash.com/photo-1542849808-1ed9a6d0e862?auto=format&fit=crop&w=600&q=80",
   },
   {
     id: "mental-health",
@@ -93,7 +99,8 @@ export const services: ServiceItem[] = [
     short: "Counseling support",
     description:
       "Confidential mental health support and guidance to help patients and families navigate emotional wellbeing.",
-    image: "https://placehold.co/600x400/1e3a5f/ffffff?text=Mental+Health",
+    image:
+      "https://images.unsplash.com/photo-1527137342181-19aab11a8ee8?auto=format&fit=crop&w=600&q=80",
   },
   {
     id: "baby-care",
@@ -101,7 +108,8 @@ export const services: ServiceItem[] = [
     short: "Newborn & infant",
     description:
       "Trusted baby care and newborn support from trained caregivers, focused on safety, hygiene, and comfort.",
-    image: "https://placehold.co/600x400/4a90d9/ffffff?text=Baby+Care",
+    image:
+      "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=600&q=80",
   },
 ];
 

@@ -3,6 +3,10 @@ export const CONTENT_SECTION_MAP = {
     heading: "hero_heading",
     subheading: "hero_subheading",
     button_text: "hero_button_text",
+    slide_1: "hero_slide_1",
+    slide_2: "hero_slide_2",
+    slide_3: "hero_slide_3",
+    slide_4: "hero_slide_4",
   },
   about: {
     heading: "about_heading",
@@ -32,6 +36,13 @@ export function contentDbKey(section: string, key: string): string | null {
   return sectionMap[key] || null;
 }
 
+export const DEFAULT_SLIDES = [
+  "https://images.unsplash.com/photo-1643297654416-05795d62e39c?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80",
+];
+
 export function groupContent(map: Record<string, string>) {
   return {
     hero: {
@@ -40,6 +51,10 @@ export function groupContent(map: Record<string, string>) {
         map.hero_subheading ||
         "Trusted nursing, diagnostics, and personal care at your doorstep across Lahore.",
       button_text: map.hero_button_text || "Book Appointment",
+      slide_1: map.hero_slide_1 || DEFAULT_SLIDES[0],
+      slide_2: map.hero_slide_2 || DEFAULT_SLIDES[1],
+      slide_3: map.hero_slide_3 || DEFAULT_SLIDES[2],
+      slide_4: map.hero_slide_4 || DEFAULT_SLIDES[3],
     },
     about: {
       heading: map.about_heading || "Care you can trust, closer to home",
