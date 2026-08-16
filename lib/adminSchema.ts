@@ -159,6 +159,15 @@ export async function ensureAdminSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
 
+    // Ensure unique key exists for content_key (older DBs may miss it)
+  try {
+    await pool.execute(
+      `ALTER TABLE content ADD UNIQUE KEY uniq_content_key (content_key)`
+    );
+  } catch {
+    // already exists or unsupported — ignore
+  }
+
   const defaults: Array<[string, string]> = [
     ["hero_heading", "Care You Can Trust"],
     [

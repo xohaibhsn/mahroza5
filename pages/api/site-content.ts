@@ -24,7 +24,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const [rows] = await pool.execute("SELECT content_key, content_value FROM content");
     const map: Record<string, string> = {};
     for (const row of rows as ContentRow[]) {
-      map[row.content_key] = row.content_value || "";
+      const prev = map[row.content_key];
+      const next = row.content_value || "";
+      // Prefer non-empty values if duplicate keys exist
+      if (!prev || next) map[row.content_key] = next;
     }
 
     const grouped = groupContent(map);

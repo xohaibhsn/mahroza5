@@ -10,28 +10,34 @@ export default function Navbar() {
   const [logoUrl, setLogoUrl] = useState("");
   const [phone, setPhone] = useState(company.phone);
   const [ready, setReady] = useState(false);
+  const [imgBroken, setImgBroken] = useState(false);
 
   useEffect(() => {
     let active = true;
-    (async () => {
+    const loadLogo = async () => {
       try {
-        const res = await fetch("/api/site-content");
+        const res = await fetch(`/api/site-content?t=${Date.now()}`, { cache: "no-store" });
         const data = await res.json();
         if (!active) return;
-        setLogoUrl(
-          String(data?.settings?.logo_url || data?.data?.logo_url || "").trim()
+        const url = String(
+          data?.settings?.logo_url || data?.data?.logo_url || data?.logo_url || ""
+        ).trim();
+        setLogoUrl(url);
+        setImgBroken(false);
+        setPhone(
+          data?.settings?.phone || data?.data?.phone || data?.phone || company.phone
         );
-        setPhone(data?.settings?.phone || data?.data?.phone || company.phone);
       } catch {
         if (active) setLogoUrl("");
       } finally {
         if (active) setReady(true);
       }
-    })();
+    };
+    loadLogo();
     return () => {
       active = false;
     };
-  }, []);
+  }, [router.asPath]);
 
   useEffect(() => {
     const close = () => setOpen(false);
@@ -49,20 +55,29 @@ export default function Navbar() {
   const isActive = (href: string) =>
     href === "/" ? router.pathname === "/" : router.pathname.startsWith(href);
 
+  const showImage = ready && Boolean(logoUrl) && !imgBroken;
+
   return (
     <header className="sticky top-0 z-40 bg-primary shadow-soft">
       <div className="container-page flex h-16 items-center justify-between lg:h-[4.25rem]">
         <Link href="/" className="group flex min-h-14 min-w-[140px] items-center gap-2" aria-label="QHC home">
-          {!ready ? null : logoUrl ? (
+          {showImage ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="QHC" className="h-14 w-auto object-contain" />
-          ) : (
+            <img
+              src={logoUrl}
+              alt="QHC"
+              className="h-14 w-auto max-w-[220px] object-contain"
+              onError={() => setImgBroken(true)}
+            />
+          ) : ready ? (
             <span className="font-display text-lg font-bold tracking-tight text-white sm:text-xl">
               QHC{" "}
               <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-secondary-light sm:text-sm">
                 Quality Health Care
               </span>
             </span>
+          ) : (
+            <span className="inline-block h-8 w-32 animate-pulse rounded bg-white/10" />
           )}
         </Link>
 

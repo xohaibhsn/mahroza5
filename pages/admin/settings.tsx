@@ -36,8 +36,24 @@ async function uploadImage(file: File, folder: string) {
     body: formData,
   });
   const data = await res.json();
-  if (!res.ok || !data.url) throw new Error(data.message || data.error || "Upload failed.");
+  if (!res.ok || !data.url) {
+    throw new Error(data.message || data.error || "Cloudinary upload failed.");
+  }
   return String(data.url);
+}
+
+async function saveSettings(payload: Partial<SettingsForm>) {
+  const res = await fetch("/api/admin-settings", {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok || data.success === false) {
+    throw new Error(data.error || data.message || `Save failed (HTTP ${res.status})`);
+  }
+  return data;
 }
 
 export default function AdminSettingsPage() {
@@ -87,18 +103,12 @@ export default function AdminSettingsPage() {
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/admin-settings", {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok || data.success === false) {
-        throw new Error(data.error || data.message || "Save failed.");
-      }
+      const data = await saveSettings(form);
       applyRaw((data.data || data) as Record<string, string>);
-      setMessage({ ok: true, text: "All settings saved. Logo/favicon will appear on the website." });
+      setMessage({
+        ok: true,
+        text: "All settings saved. Open homepage and hard-refresh (Ctrl+F5).",
+      });
     } catch (err) {
       setMessage({
         ok: false,
@@ -112,16 +122,7 @@ export default function AdminSettingsPage() {
   const saveOne = async (key: keyof SettingsForm) => {
     setMessage(null);
     try {
-      const res = await fetch("/api/admin-settings", {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [key]: form[key] }),
-      });
-      const data = await res.json();
-      if (!res.ok || data.success === false) {
-        throw new Error(data.error || data.message || "Save failed.");
-      }
+      const data = await saveSettings({ [key]: form[key] });
       applyRaw((data.data || data) as Record<string, string>);
       setMessage({ ok: true, text: `${key.replace(/_/g, " ")} saved.` });
     } catch (err) {
@@ -135,30 +136,24 @@ export default function AdminSettingsPage() {
   const onUpload = async (kind: "logo" | "favicon", file: File) => {
     setUploading(kind);
     setMessage(null);
+    const key = kind === "logo" ? "logo_url" : "favicon_url";
     try {
+      // 1) Upload to Cloudinary
       const url = await uploadImage(file, kind === "logo" ? "qhcare/logo" : "qhcare/favicon");
-      const key = kind === "logo" ? "logo_url" : "favicon_url";
       setForm((f) => ({ ...f, [key]: url }));
 
-      const res = await fetch("/api/admin-settings", {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [key]: url }),
-      });
-      const data = await res.json();
-      if (!res.ok || data.success === false) {
-        throw new Error(data.error || data.message || "DB save failed after upload.");
-      }
+      // 2) Persist URL in database (required for public site)
+      const data = await saveSettings({ [key]: url });
       applyRaw((data.data || data) as Record<string, string>);
+
       setMessage({
         ok: true,
-        text: `${kind} uploaded to Cloudinary and saved to database. Refresh homepage to see it.`,
+        text: `${kind.toUpperCase()} saved to database. Hard-refresh website (Ctrl+F5) to see it.`,
       });
     } catch (err) {
       setMessage({
         ok: false,
-        text: err instanceof Error ? err.message : "Upload failed.",
+        text: err instanceof Error ? err.message : "Upload/save failed.",
       });
     } finally {
       setUploading(null);
@@ -215,6 +210,9 @@ export default function AdminSettingsPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Logo Upload</label>
+              <p className="mb-2 text-xs text-slate-500">
+                Upload PNG/JPG. After upload, URL must save to DB (green message).
+              </p>
               <input
                 type="file"
                 accept="image/*"
@@ -225,24 +223,34 @@ export default function AdminSettingsPage() {
                 }}
               />
               {uploading === "logo" ? (
-                <p className="mt-2 text-xs text-secondary">Uploading logo...</p>
+                <p className="mt-2 text-xs text-secondary">Uploading &amp; saving logo...</p>
               ) : null}
               {form.logo_url ? (
-                <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={form.logo_url}
                     alt="Logo preview"
-                    className="h-16 bg-primary object-contain p-2"
+                    className="h-16 rounded bg-[#1e3a5f] object-contain p-2"
                   />
-                  <p className="mt-2 break-all text-[11px] text-slate-500">{form.logo_url}</p>
+                  <p className="mt-2 break-all text-[11px] text-slate-600">{form.logo_url}</p>
+                  <button
+                    type="button"
+                    className="mt-2 text-xs font-semibold text-secondary"
+                    onClick={() => saveOne("logo_url")}
+                  >
+                    Re-save logo URL to database
+                  </button>
                 </div>
               ) : (
-                <p className="mt-2 text-xs text-slate-500">No logo set.</p>
+                <p className="mt-2 text-xs text-red-600">No logo in database yet.</p>
               )}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Favicon Upload</label>
+              <p className="mb-2 text-xs text-slate-500">
+                Small square PNG recommended. Must save to DB for browser tab icon.
+              </p>
               <input
                 type="file"
                 accept="image/*"
@@ -253,26 +261,37 @@ export default function AdminSettingsPage() {
                 }}
               />
               {uploading === "favicon" ? (
-                <p className="mt-2 text-xs text-secondary">Uploading favicon...</p>
+                <p className="mt-2 text-xs text-secondary">Uploading &amp; saving favicon...</p>
               ) : null}
               {form.favicon_url ? (
-                <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={form.favicon_url}
                     alt="Favicon preview"
                     className="h-10 w-10 object-contain"
                   />
-                  <p className="mt-2 break-all text-[11px] text-slate-500">{form.favicon_url}</p>
+                  <p className="mt-2 break-all text-[11px] text-slate-600">{form.favicon_url}</p>
+                  <button
+                    type="button"
+                    className="mt-2 text-xs font-semibold text-secondary"
+                    onClick={() => saveOne("favicon_url")}
+                  >
+                    Re-save favicon URL to database
+                  </button>
                 </div>
               ) : (
-                <p className="mt-2 text-xs text-slate-500">No favicon set.</p>
+                <p className="mt-2 text-xs text-red-600">No favicon in database yet.</p>
               )}
             </div>
           </div>
 
           {message ? (
-            <p className={`text-sm ${message.ok ? "text-emerald-600" : "text-red-600"}`}>
+            <p
+              className={`rounded-lg px-3 py-2 text-sm ${
+                message.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+              }`}
+            >
               {message.text}
             </p>
           ) : null}
