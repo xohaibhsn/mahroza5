@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import type { ResultSetHeader } from "mysql2";
 import { requireAdminJwt } from "@/lib/adminApiAuth";
-import { getPool } from "@/lib/db";
+import { ensureSettingsKeys, loadContentMap, upsertFlatContent } from "@/lib/contentStore";
 
 const SETTINGS_DEFAULTS = {
   site_title: "QHC - Quality Health Care",
@@ -17,55 +16,17 @@ const SETTINGS_DEFAULTS = {
 
 const SETTINGS_KEYS = Object.keys(SETTINGS_DEFAULTS) as Array<keyof typeof SETTINGS_DEFAULTS>;
 
-/** Works even if UNIQUE key is missing on content_key */
-async function upsertContent(key: string, value: string) {
-  const pool = getPool();
-  const [updateResult] = await pool.execute(
-    `UPDATE content SET content_value = ? WHERE content_key = ?`,
-    [value, key]
-  );
-  const updated = (updateResult as ResultSetHeader).affectedRows || 0;
-  if (updated > 0) return;
-
-  try {
-    await pool.execute(
-      `INSERT INTO content (content_key, content_value) VALUES (?, ?)`,
-      [key, value]
-    );
-  } catch {
-    // Race / duplicate: force update
-    await pool.execute(
-      `UPDATE content SET content_value = ? WHERE content_key = ?`,
-      [value, key]
-    );
-  }
-}
-
 async function readSettings() {
-  const pool = getPool();
-  const [rows] = await pool.execute(
-    `SELECT content_key, content_value FROM content
-     WHERE content_key IN (
-       'phone','whatsapp','address1','address2','address_1','address_2',
-       'office1','office2','email','logo_url','favicon_url','site_title','meta_description'
-     )`
-  );
-
-  const map: Record<string, string> = {};
-  for (const row of rows as Array<{ content_key: string; content_value: string | null }>) {
-    // Last non-empty value wins if duplicates exist
-    const prev = map[row.content_key];
-    const next = row.content_value || "";
-    if (!prev || next) map[row.content_key] = next;
-  }
+  await ensureSettingsKeys();
+  const map = await loadContentMap();
 
   return {
     site_title: map.site_title || SETTINGS_DEFAULTS.site_title,
     meta_description: map.meta_description || SETTINGS_DEFAULTS.meta_description,
     phone: map.phone || SETTINGS_DEFAULTS.phone,
     whatsapp: map.whatsapp || SETTINGS_DEFAULTS.whatsapp,
-    address1: map.address1 || map.address_1 || map.office1 || SETTINGS_DEFAULTS.address1,
-    address2: map.address2 || map.address_2 || map.office2 || SETTINGS_DEFAULTS.address2,
+    address1: map.address1 || map.office1 || SETTINGS_DEFAULTS.address1,
+    address2: map.address2 || map.office2 || SETTINGS_DEFAULTS.address2,
     email: map.email || SETTINGS_DEFAULTS.email,
     logo_url: (map.logo_url || "").trim(),
     favicon_url: (map.favicon_url || "").trim(),
@@ -108,12 +69,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       for (const key of SETTINGS_KEYS) {
         if (typeof updates[key] !== "string") continue;
         const value = String(updates[key]).trim();
-        await upsertContent(key, value);
+        const ok = await upsertFlatContent(key, value);
+        if (!ok) continue;
         saved.push(key);
         changed += 1;
 
-        if (key === "address1") await upsertContent("office1", value);
-        if (key === "address2") await upsertContent("office2", value);
+        if (key === "address1") await upsertFlatContent("office1", value);
+        if (key === "address2") await upsertFlatContent("office2", value);
       }
 
       if (!changed) {

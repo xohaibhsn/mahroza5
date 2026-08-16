@@ -48,11 +48,11 @@ CREATE TABLE IF NOT EXISTS testimonials (
 
 CREATE TABLE IF NOT EXISTS content (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  content_key VARCHAR(100) NOT NULL,
-  content_value TEXT NULL,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  section VARCHAR(100) NOT NULL,
+  `key` VARCHAR(100) NOT NULL,
+  value TEXT NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uniq_content_key (content_key)
+  UNIQUE KEY unique_section_key (section, `key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS messages (

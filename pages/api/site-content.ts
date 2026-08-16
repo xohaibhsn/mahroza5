@@ -1,19 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { methodNotAllowed } from "@/lib/adminAuth";
-import { groupContent } from "@/lib/contentSections";
-import pool from "@/lib/db";
-
-const DEFAULT_SLIDES = [
-  "https://images.unsplash.com/photo-1643297654416-05795d62e39c?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80",
-];
-
-type ContentRow = {
-  content_key: string;
-  content_value: string | null;
-};
+import { groupContent, DEFAULT_SLIDES } from "@/lib/contentSections";
+import { loadContentMap } from "@/lib/contentStore";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -21,15 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const [rows] = await pool.execute("SELECT content_key, content_value FROM content");
-    const map: Record<string, string> = {};
-    for (const row of rows as ContentRow[]) {
-      const prev = map[row.content_key];
-      const next = row.content_value || "";
-      // Prefer non-empty values if duplicate keys exist
-      if (!prev || next) map[row.content_key] = next;
-    }
-
+    const map = await loadContentMap();
     const grouped = groupContent(map);
 
     const settings = {
@@ -64,7 +44,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       stats: grouped.stats,
       why_choose_us: grouped.why_choose_us,
       slides,
-      // Flat compatibility for older clients
       data: {
         ...map,
         logo_url: settings.logo_url,

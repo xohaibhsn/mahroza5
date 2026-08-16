@@ -36,9 +36,9 @@ export type TestimonialRow = RowDataPacket & {
 
 export type ContentRow = RowDataPacket & {
   id: number;
-  content_key: string;
-  content_value: string | null;
-  updated_at: string;
+  section: string;
+  key: string;
+  value: string | null;
 };
 
 export type MessageRow = RowDataPacket & {
@@ -134,14 +134,15 @@ export async function ensureAdminSchema() {
     await ignoreDuplicateColumn(error);
   }
 
+  // Live Hostinger schema: content(section, key, value) + unique_section_key
   await pool.execute(`
     CREATE TABLE IF NOT EXISTS content (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-      content_key VARCHAR(100) NOT NULL,
-      content_value TEXT NULL,
-      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      section VARCHAR(100) NOT NULL,
+      \`key\` VARCHAR(100) NOT NULL,
+      value TEXT NULL,
       PRIMARY KEY (id),
-      UNIQUE KEY uniq_content_key (content_key)
+      UNIQUE KEY unique_section_key (section, \`key\`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
 
@@ -159,72 +160,63 @@ export async function ensureAdminSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
 
-    // Ensure unique key exists for content_key (older DBs may miss it)
-  try {
-    await pool.execute(
-      `ALTER TABLE content ADD UNIQUE KEY uniq_content_key (content_key)`
-    );
-  } catch {
-    // already exists or unsupported — ignore
-  }
-
-  const defaults: Array<[string, string]> = [
-    ["hero_heading", "Care You Can Trust"],
+  const defaults: Array<[string, string, string]> = [
+    ["hero", "heading", "Care You Can Trust"],
     [
-      "hero_subheading",
+      "hero",
+      "subheading",
       "Trusted nursing, diagnostics, and personal care at your doorstep across Lahore.",
     ],
-    ["hero_button_text", "Book Appointment"],
-    ["about_heading", "Care you can trust, closer to home"],
+    ["hero", "button_text", "Book Appointment"],
+    ["about", "heading", "Care you can trust, closer to home"],
     [
-      "about_description",
+      "about",
+      "description",
       "QHC — Quality Health Care brings hospital-quality support into Lahore homes with compassion, skill, and reliability under Director Mahroza Rao.",
     ],
+    ["stats", "patients", "1000+"],
+    ["stats", "services", "8"],
+    ["stats", "availability", "24/7"],
+    ["stats", "city", "Lahore"],
+    ["why_choose_us", "point_1", "Qualified Healthcare Professionals"],
+    ["why_choose_us", "point_2", "24/7 Availability Across Lahore"],
+    ["why_choose_us", "point_3", "Patient-Centric Home Care"],
+    ["why_choose_us", "point_4", "Seamless Continuum of Care"],
+    ["settings", "phone", "+92 3004334065"],
+    ["settings", "whatsapp", "+92 3004334065"],
+    ["settings", "address1", "817, Al Hafeez Shopping Mall, Gulberg, Lahore"],
+    ["settings", "address2", "Office #5, Bismillah Plaza, Defense Road, Lahore"],
+    ["settings", "email", "info@qhcare.com.pk"],
+    ["settings", "logo_url", ""],
+    ["settings", "favicon_url", ""],
+    ["settings", "site_title", "QHC - Quality Health Care"],
+    ["settings", "meta_description", "Professional home healthcare services in Lahore"],
     [
-      "about_text",
-      "QHC — Quality Health Care brings hospital-quality support into Lahore homes with compassion, skill, and reliability under Director Mahroza Rao.",
-    ],
-    ["stat_patients", "1000+"],
-    ["stat_services", "8"],
-    ["stat_availability", "24/7"],
-    ["stat_location", "Lahore"],
-    ["why_point_1", "Qualified Healthcare Professionals"],
-    ["why_point_2", "24/7 Availability Across Lahore"],
-    ["why_point_3", "Patient-Centric Home Care"],
-    ["why_point_4", "Seamless Continuum of Care"],
-    ["phone", "+92 3004334065"],
-    ["whatsapp", "+92 3004334065"],
-    ["address1", "817, Al Hafeez Shopping Mall, Gulberg, Lahore"],
-    ["address2", "Office #5, Bismillah Plaza, Defense Road, Lahore"],
-    ["office1", "817, Al Hafeez Shopping Mall, Gulberg, Lahore"],
-    ["office2", "Office #5, Bismillah Plaza, Defense Road, Lahore"],
-    ["email", "info@qhcare.com.pk"],
-    ["logo_url", ""],
-    ["favicon_url", ""],
-    ["site_title", "QHC - Quality Health Care"],
-    ["meta_description", "Professional home healthcare services in Lahore"],
-    [
-      "hero_slide_1",
+      "hero",
+      "slide_1",
       "https://images.unsplash.com/photo-1643297654416-05795d62e39c?auto=format&fit=crop&w=800&q=80",
     ],
     [
-      "hero_slide_2",
+      "hero",
+      "slide_2",
       "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80",
     ],
     [
-      "hero_slide_3",
+      "hero",
+      "slide_3",
       "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
     ],
     [
-      "hero_slide_4",
+      "hero",
+      "slide_4",
       "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80",
     ],
   ];
 
-  for (const [key, value] of defaults) {
+  for (const [section, key, value] of defaults) {
     await pool.execute(
-      `INSERT IGNORE INTO content (content_key, content_value) VALUES (:key, :value)`,
-      { key, value }
+      `INSERT IGNORE INTO content (section, \`key\`, value) VALUES (?, ?, ?)`,
+      [section, key, value]
     );
   }
 }

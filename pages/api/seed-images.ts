@@ -52,28 +52,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Also seed default hero slides if empty
     const slides = [
       [
-        "hero_slide_1",
+        "slide_1",
         "https://images.unsplash.com/photo-1643297654416-05795d62e39c?auto=format&fit=crop&w=800&q=80",
       ],
       [
-        "hero_slide_2",
+        "slide_2",
         "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80",
       ],
       [
-        "hero_slide_3",
+        "slide_3",
         "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80",
       ],
       [
-        "hero_slide_4",
+        "slide_4",
         "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80",
       ],
     ] as const;
 
     for (const [key, value] of slides) {
       await pool.execute(
-        `INSERT INTO content (content_key, content_value)
-         VALUES (?, ?)
-         ON DUPLICATE KEY UPDATE content_value = IF(content_value IS NULL OR content_value = '', VALUES(content_value), content_value)`,
+        `INSERT INTO content (section, \`key\`, value)
+         VALUES ('hero', ?, ?)
+         ON DUPLICATE KEY UPDATE value = IF(value IS NULL OR value = '', VALUES(value), value)`,
         [key, value]
       );
     }

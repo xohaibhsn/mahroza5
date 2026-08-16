@@ -3,7 +3,8 @@ import {
   services as fallbackServices,
   testimonials as fallbackTestimonials,
 } from "@/lib/constants";
-import { ensureAdminSchema, type ContentRow, type ServiceRow, type TestimonialRow } from "@/lib/adminSchema";
+import { ensureAdminSchema, type ServiceRow, type TestimonialRow } from "@/lib/adminSchema";
+import { loadContentMap } from "@/lib/contentStore";
 import { getPool } from "@/lib/db";
 import type { SiteContent, SiteService, SiteTestimonial } from "@/lib/siteTypes";
 
@@ -142,12 +143,7 @@ async function seedCatalogIfEmpty() {
   }
 }
 
-function mapContent(rows: ContentRow[]): SiteContent {
-  const map: Record<string, string> = {};
-  for (const row of rows) {
-    map[row.content_key] = row.content_value || "";
-  }
-
+function mapContent(map: Record<string, string>): SiteContent {
   const aboutDescription =
     map.about_description || map.about_text || defaultContent.about_description;
 
@@ -181,9 +177,7 @@ function mapContent(rows: ContentRow[]): SiteContent {
 export async function getSiteContent(): Promise<SiteContent> {
   try {
     await ensureAdminSchema();
-    const pool = getPool();
-    const [rows] = await pool.query("SELECT content_key, content_value FROM content");
-    return mapContent(rows as ContentRow[]);
+    return mapContent(await loadContentMap());
   } catch (error) {
     console.error("getSiteContent fallback:", error);
     return defaultContent;
