@@ -75,7 +75,7 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-secondary-light">
               Home Healthcare · Lahore
             </p>
-            <h1 className="mt-4 text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="mt-4 text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
               QHC
             </h1>
             <p className="mt-2 text-2xl font-semibold text-white/95 sm:text-3xl">
@@ -162,7 +162,7 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
               <p className="text-3xl" aria-hidden>
                 {stat.icon}
               </p>
-              <p className={`mt-3 text-4xl font-bold sm:text-5xl ${stat.color}`}>{stat.value}</p>
+              <p className={`mt-3 text-4xl font-semibold sm:text-5xl ${stat.color}`}>{stat.value}</p>
               <p className="mt-2 text-sm font-medium uppercase tracking-wider text-slate-500">
                 {stat.label}
               </p>

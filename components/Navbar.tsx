@@ -70,7 +70,7 @@ export default function Navbar() {
               onError={() => setImgBroken(true)}
             />
           ) : ready ? (
-            <span className="font-display text-lg font-bold tracking-tight text-white sm:text-xl">
+            <span className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
               QHC{" "}
               <span className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-secondary-light sm:text-sm">
                 Quality Health Care

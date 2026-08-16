@@ -34,7 +34,7 @@ export default function ServiceCard({ service, href = "/services" }: ServiceCard
         )}
       </div>
       <div className="p-6">
-        <h3 className="mb-2 text-xl font-bold text-[#1e3a5f]" style={{ fontFamily: "'Playfair Display', serif" }}>
+        <h3 className="mb-2 text-xl font-semibold tracking-tight text-[#1e3a5f]">
           {service.title}
         </h3>
         <p className="mb-4 text-sm leading-relaxed text-gray-500">{service.description}</p>

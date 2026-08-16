@@ -7,6 +7,7 @@
   --foreground: #1e293b;
   --primary: #1e3a5f;
   --secondary: #4a90d9;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 html {
@@ -16,21 +17,19 @@ html {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: var(--font-sans);
+  font-weight: 400;
 }
 
 h1,
 h2,
-h3 {
-  font-family: "Playfair Display", serif;
-}
-
-body,
-p,
-a,
-span,
-button {
-  font-family: "Inter", sans-serif;
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 @layer components {
@@ -48,7 +47,7 @@ button {
 
   .section-title {
     @apply text-3xl font-semibold tracking-tight text-primary sm:text-4xl;
-    font-family: "Playfair Display", serif;
+    font-family: var(--font-sans);
   }
 
   .section-subtitle {

@@ -24,7 +24,7 @@ export default function Footer() {
                 className="h-10 w-auto max-w-[160px] object-contain"
               />
             ) : (
-              <span className="font-display text-3xl font-bold">QHC</span>
+              <span className="font-display text-3xl font-semibold">QHC</span>
             )}
           </Link>
           <p className="mt-1 text-sm font-medium uppercase tracking-[0.16em] text-secondary-light">

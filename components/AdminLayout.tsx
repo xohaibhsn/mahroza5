@@ -116,7 +116,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           }`}
         >
           <div className="border-b border-white/10 px-5 py-5">
-            <p className="font-display text-2xl font-bold">QHC</p>
+            <p className="font-display text-2xl font-semibold">QHC</p>
             <p className="mt-1 text-xs uppercase tracking-[0.18em] text-secondary-light">
               Admin Panel
             </p>
