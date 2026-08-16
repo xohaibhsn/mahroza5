@@ -61,9 +61,37 @@ export default function SiteSettingsProvider({ children }: { children: ReactNode
     try {
       const res = await fetch("/api/site-content");
       const data = await res.json();
-      if (res.ok && data.data) {
-        setSettings((prev) => ({ ...prev, ...data.data }));
-      }
+      if (!res.ok) return;
+
+      // Prefer new nested settings shape, fall back to flat data
+      const settingsBlock = data.settings || {};
+      const flat = data.data || {};
+      setSettings((prev) => ({
+        ...prev,
+        ...flat,
+        logo_url: settingsBlock.logo_url ?? flat.logo_url ?? prev.logo_url,
+        favicon_url: settingsBlock.favicon_url ?? flat.favicon_url ?? prev.favicon_url,
+        phone: settingsBlock.phone ?? flat.phone ?? prev.phone,
+        whatsapp: settingsBlock.whatsapp ?? flat.whatsapp ?? prev.whatsapp,
+        address1: settingsBlock.address1 ?? flat.address1 ?? prev.address1,
+        address2: settingsBlock.address2 ?? flat.address2 ?? prev.address2,
+        email: settingsBlock.email ?? flat.email ?? prev.email,
+        site_title: settingsBlock.site_title ?? flat.site_title ?? prev.site_title,
+        meta_description:
+          settingsBlock.meta_description ?? flat.meta_description ?? prev.meta_description,
+        hero_heading: data.hero?.heading ?? flat.hero_heading ?? prev.hero_heading,
+        hero_subheading: data.hero?.subheading ?? flat.hero_subheading ?? prev.hero_subheading,
+        hero_button_text: data.hero?.button_text ?? flat.hero_button_text ?? prev.hero_button_text,
+        about_heading: data.about?.heading ?? flat.about_heading ?? prev.about_heading,
+        about_description:
+          data.about?.description ?? flat.about_description ?? prev.about_description,
+        about_text: data.about?.description ?? flat.about_text ?? prev.about_text,
+        stat_patients: data.stats?.patients ?? flat.stat_patients ?? prev.stat_patients,
+        stat_services: data.stats?.services ?? flat.stat_services ?? prev.stat_services,
+        stat_availability:
+          data.stats?.availability ?? flat.stat_availability ?? prev.stat_availability,
+        stat_location: data.stats?.city ?? flat.stat_location ?? prev.stat_location,
+      }));
     } catch (error) {
       console.error("Failed to load site settings:", error);
     } finally {

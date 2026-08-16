@@ -1,26 +1,33 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { useEffect } from "react";
 import SiteSettingsProvider from "@/components/SiteSettingsProvider";
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-fraunces",
-  display: "swap",
-});
-
 export default function App({ Component, pageProps }: AppProps) {
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/site-content");
+        const data = await res.json();
+        const faviconUrl = data?.settings?.favicon_url;
+        if (faviconUrl) {
+          let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+          if (!link) {
+            link = document.createElement("link");
+            link.rel = "icon";
+            document.head.appendChild(link);
+          }
+          link.href = faviconUrl;
+        }
+      } catch {
+        // keep default favicon
+      }
+    })();
+  }, []);
+
   return (
-    <div className={`${dmSans.variable} ${fraunces.variable} font-sans`}>
-      <SiteSettingsProvider>
-        <Component {...pageProps} />
-      </SiteSettingsProvider>
-    </div>
+    <SiteSettingsProvider>
+      <Component {...pageProps} />
+    </SiteSettingsProvider>
   );
 }

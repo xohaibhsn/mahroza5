@@ -21,8 +21,8 @@ const config: Config = {
         surface: "#f8fafc",
       },
       fontFamily: {
-        sans: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
-        display: ["var(--font-fraunces)", "Georgia", "serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Playfair Display", "Georgia", "serif"],
       },
       boxShadow: {
         soft: "0 10px 40px -12px rgba(30, 58, 95, 0.18)",

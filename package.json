@@ -19,7 +19,8 @@
     "next-cloudinary": "^6.18.8",
     "react": "^18",
     "react-dom": "^18",
-    "react-hook-form": "^7.85.0"
+    "react-hook-form": "^7.85.0",
+    "swiper": "^14.1.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

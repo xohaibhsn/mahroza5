@@ -16,7 +16,21 @@ html {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Playfair Display", serif;
+}
+
+body,
+p,
+a,
+span,
+button {
+  font-family: "Inter", sans-serif;
 }
 
 @layer components {
@@ -33,7 +47,8 @@ body {
   }
 
   .section-title {
-    @apply font-display text-3xl font-semibold tracking-tight text-primary sm:text-4xl;
+    @apply text-3xl font-semibold tracking-tight text-primary sm:text-4xl;
+    font-family: "Playfair Display", serif;
   }
 
   .section-subtitle {

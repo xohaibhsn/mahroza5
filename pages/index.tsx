@@ -1,9 +1,12 @@
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import AppointmentForm from "@/components/AppointmentForm";
 import Layout from "@/components/Layout";
 import ServiceCard from "@/components/ServiceCard";
 import type { SiteContent, SiteService, SiteTestimonial } from "@/lib/siteTypes";
+
+const HeroSlider = dynamic(() => import("@/components/HeroSlider"), { ssr: false });
 
 function phoneToTel(phone: string) {
   return phone.replace(/[^\d+]/g, "");
@@ -50,30 +53,10 @@ type HomePageProps = {
 
 export default function HomePage({ content, services, testimonials }: HomePageProps) {
   const stats = [
-    {
-      value: content.stat_patients,
-      label: "Patients",
-      icon: "👥",
-      border: "border-[#1e3a5f]",
-    },
-    {
-      value: content.stat_services,
-      label: "Services",
-      icon: "🏥",
-      border: "border-[#4a90d9]",
-    },
-    {
-      value: content.stat_availability,
-      label: "Available",
-      icon: "⏰",
-      border: "border-emerald-500",
-    },
-    {
-      value: content.stat_location,
-      label: "City",
-      icon: "📍",
-      border: "border-rose-400",
-    },
+    { value: content.stat_patients, label: "Patients", icon: "👥", color: "text-[#1e3a5f]" },
+    { value: content.stat_services, label: "Services", icon: "🏥", color: "text-[#4a90d9]" },
+    { value: content.stat_availability, label: "Available", icon: "⏰", color: "text-emerald-600" },
+    { value: content.stat_location, label: "City", icon: "📍", color: "text-rose-500" },
   ];
 
   return (
@@ -87,22 +70,15 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
       </Head>
 
       <section className="relative overflow-hidden bg-hero-glow text-white">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-25"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-          }}
-        />
-        <div className="container-page relative grid items-center gap-10 py-16 lg:grid-cols-2 lg:py-24">
+        <div className="container-page relative grid items-center gap-10 py-16 lg:grid-cols-2 lg:py-20">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-secondary-light">
               Home Healthcare · Lahore
             </p>
-            <h1 className="mt-4 font-display text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="mt-4 text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
               QHC
             </h1>
-            <p className="mt-2 font-display text-2xl font-medium text-white/95 sm:text-3xl">
+            <p className="mt-2 text-2xl font-semibold text-white/95 sm:text-3xl">
               {content.hero_heading}
             </p>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-white/75 sm:text-lg">
@@ -118,18 +94,11 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
             </div>
           </div>
 
-          <div className="relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=800&q=80"
-              alt="Healthcare Professional"
-              className="h-[450px] w-full rounded-2xl object-cover shadow-2xl"
-            />
-          </div>
+          <HeroSlider />
         </div>
       </section>
 
-      <section className="py-16 sm:py-20">
+      <section className="bg-white py-20">
         <div className="container-page">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -146,7 +115,7 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
             </Link>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {services.map((service) => (
               <ServiceCard key={service.id} service={service} />
             ))}
@@ -154,7 +123,7 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
         </div>
       </section>
 
-      <section className="bg-white py-16 sm:py-20">
+      <section className="bg-[#f8fafc] py-20">
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-secondary">
@@ -168,55 +137,32 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {whyCards.map((card) => (
-              <div
-                key={card.title}
-                className="rounded-2xl border border-slate-100 bg-surface p-6 shadow-card"
-              >
+              <div key={card.title} className="rounded-2xl bg-white p-6 shadow-md">
                 <div
                   className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl text-white ${card.bg}`}
                 >
                   {card.emoji}
                 </div>
-                <h3 className="font-semibold text-primary">{card.title}</h3>
+                <h3 className="text-lg font-semibold text-primary">{card.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   {content[card.key] || card.title}
                 </p>
               </div>
             ))}
           </div>
-
-          <div className="mt-12 grid gap-4 sm:grid-cols-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80"
-              alt="QHC care team"
-              className="h-64 w-full rounded-2xl object-cover shadow-card sm:h-80"
-            />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=600&q=80"
-              alt="Patient receiving care at home"
-              className="h-64 w-full rounded-2xl object-cover shadow-card sm:h-80"
-            />
-          </div>
         </div>
       </section>
 
-      <section className="bg-surface py-14">
-        <div className="container-page grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+      <section className="bg-white py-20">
+        <div className="container-page grid grid-cols-2 gap-6 md:grid-cols-4">
           {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className={`rounded-2xl border-t-4 bg-white p-6 text-center shadow-card ${stat.border}`}
-            >
+            <div key={stat.label} className="rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-md">
               <p className="text-3xl" aria-hidden>
                 {stat.icon}
               </p>
-              <p className="mt-3 font-display text-3xl font-semibold text-primary sm:text-4xl">
-                {stat.value}
-              </p>
+              <p className={`mt-3 text-4xl font-bold sm:text-5xl ${stat.color}`}>{stat.value}</p>
               <p className="mt-2 text-sm font-medium uppercase tracking-wider text-slate-500">
                 {stat.label}
               </p>
@@ -225,7 +171,7 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
         </div>
       </section>
 
-      <section className="py-16 sm:py-20">
+      <section className="bg-[#f8fafc] py-20">
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-secondary">
@@ -237,11 +183,11 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
             {testimonials.map((item) => (
               <blockquote
                 key={`${item.name}-${item.role}`}
-                className="relative flex h-full flex-col rounded-2xl bg-white p-6 shadow-card"
+                className="relative flex h-full flex-col rounded-2xl bg-white p-6 shadow-md"
               >
                 <span className="absolute right-5 top-4 text-4xl leading-none text-secondary/20" aria-hidden>
                   &ldquo;
@@ -271,16 +217,14 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
                     </svg>
                   ))}
                 </div>
-                <p className="mt-4 flex-1 text-sm leading-relaxed text-slate-600">
-                  {item.quote}
-                </p>
+                <p className="mt-4 flex-1 text-sm leading-relaxed text-slate-600">{item.quote}</p>
               </blockquote>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-white py-16 sm:py-20">
+      <section className="bg-white py-20">
         <div className="container-page grid items-start gap-10 lg:grid-cols-2">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-secondary">

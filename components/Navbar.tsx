@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { navLinks } from "@/lib/constants";
+import { company, navLinks } from "@/lib/constants";
+import { phoneToTel } from "@/lib/siteDataClient";
 
 export default function Navbar() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [logoUrl, setLogoUrl] = useState<string>("");
-  const [logoReady, setLogoReady] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [phone, setPhone] = useState(company.phone);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -15,12 +17,13 @@ export default function Navbar() {
       try {
         const res = await fetch("/api/site-content");
         const data = await res.json();
-        const url = String(data?.data?.logo_url || "").trim();
-        if (active) setLogoUrl(url);
+        if (!active) return;
+        setLogoUrl(data?.settings?.logo_url || "");
+        setPhone(data?.settings?.phone || company.phone);
       } catch {
         if (active) setLogoUrl("");
       } finally {
-        if (active) setLogoReady(true);
+        if (active) setReady(true);
       }
     })();
     return () => {
@@ -47,14 +50,10 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-primary shadow-soft">
       <div className="container-page flex h-16 items-center justify-between lg:h-[4.25rem]">
-        <Link href="/" className="group flex min-h-12 min-w-[140px] items-center gap-2" aria-label="QHC home">
-          {!logoReady ? null : logoUrl ? (
+        <Link href="/" className="group flex min-h-14 min-w-[140px] items-center gap-2" aria-label="QHC home">
+          {!ready ? null : logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUrl}
-              alt="QHC Logo"
-              className="h-12 w-auto max-w-[200px] object-contain"
-            />
+            <img src={logoUrl} alt="QHC" className="h-14 w-auto object-contain" />
           ) : (
             <span className="font-display text-lg font-bold tracking-tight text-white sm:text-xl">
               QHC{" "}
@@ -122,6 +121,12 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          <a
+            href={`tel:${phoneToTel(phone)}`}
+            className="rounded-md px-3 py-3 text-base font-medium text-secondary-light"
+          >
+            Call {phone}
+          </a>
           <Link href="/appointment" className="btn-primary mt-2 text-center">
             Book Appointment
           </Link>

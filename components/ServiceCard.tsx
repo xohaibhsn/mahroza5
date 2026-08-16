@@ -13,38 +13,34 @@ type ServiceCardProps = {
   href?: string;
 };
 
-export default function ServiceCard({ service, href }: ServiceCardProps) {
-  const linkHref = href || `/services#${service.id}`;
+export default function ServiceCard({ service, href = "/services" }: ServiceCardProps) {
   const hasImage = Boolean(service.image && String(service.image).trim());
 
   return (
-    <article className="rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow bg-white h-full flex flex-col">
-      <div className="h-48 overflow-hidden">
+    <article className="group overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:shadow-xl">
+      <div className="relative h-52 overflow-hidden">
         {hasImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={service.image}
             alt={service.title}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#1e3a5f] to-[#4a90d9] flex items-center justify-center text-5xl">
-            🏥
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1e3a5f] to-[#4a90d9]">
+            <span className="text-6xl">🏥</span>
           </div>
         )}
       </div>
-      <div className="p-5 flex flex-1 flex-col">
-        {service.short ? (
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#4a90d9] mb-1">
-            {service.short}
-          </p>
-        ) : null}
-        <h3 className="font-bold text-[#1e3a5f] text-lg mb-2">{service.title}</h3>
-        <p className="text-gray-600 text-sm mb-4 flex-1">{service.description}</p>
+      <div className="p-6">
+        <h3 className="mb-2 text-xl font-bold text-[#1e3a5f]" style={{ fontFamily: "'Playfair Display', serif" }}>
+          {service.title}
+        </h3>
+        <p className="mb-4 text-sm leading-relaxed text-gray-500">{service.description}</p>
         <Link
-          href={linkHref}
-          className="text-[#4a90d9] font-semibold text-sm hover:underline"
+          href={href}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-[#4a90d9] hover:underline"
         >
           Know More →
         </Link>

@@ -6,6 +6,12 @@ export default function Document() {
       <Head>
         <meta name="theme-color" content="#1e3a5f" />
         <link rel="icon" href="/favicon.ico" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap"
+          rel="stylesheet"
+        />
       </Head>
       <body className="bg-surface antialiased">
         <Main />
