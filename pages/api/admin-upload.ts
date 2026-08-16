@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { methodNotAllowed } from "@/lib/adminAuth";
 import { requireAdminJwt } from "@/lib/adminApiAuth";
-import { getCloudinary } from "@/lib/cloudinary";
+import cloudinary from "@/lib/cloudinary";
 
 export const config = {
   api: {
@@ -28,7 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const cloudinary = getCloudinary();
     const uploaded = await cloudinary.uploader.upload(image, {
       folder: "qhcare",
     });

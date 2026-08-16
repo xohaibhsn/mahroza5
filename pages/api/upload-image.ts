@@ -1,11 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { v2 as cloudinary } from "cloudinary";
 import formidable from "formidable";
 import type { Fields, Files } from "formidable";
 import fs from "fs";
 import { methodNotAllowed } from "@/lib/adminAuth";
 import { requireAdminJwt } from "@/lib/adminApiAuth";
-import { configureCloudinary } from "@/lib/cloudinary";
+import cloudinary from "@/lib/cloudinary";
 
 export const config = {
   api: {
@@ -46,14 +45,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method !== "POST") {
     return methodNotAllowed(res, ["POST"]);
-  }
-
-  const { api_secret } = configureCloudinary();
-  if (!api_secret) {
-    return res.status(500).json({
-      success: false,
-      message: "CLOUDINARY_API_SECRET is missing.",
-    });
   }
 
   try {
