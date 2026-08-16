@@ -76,7 +76,8 @@ export default function SiteSettingsProvider({ children }: { children: ReactNode
   }, [refresh]);
 
   useEffect(() => {
-    const href = settings.favicon_url || "/favicon.ico";
+    const favicon = String(settings.favicon_url || "").trim();
+    const href = favicon || "/favicon.ico";
     let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
     if (!link) {
       link = document.createElement("link");
@@ -100,7 +101,7 @@ export default function SiteSettingsProvider({ children }: { children: ReactNode
       <Head>
         <title>{settings.site_title}</title>
         <meta name="description" content={settings.meta_description} />
-        <link rel="icon" href={settings.favicon_url || "/favicon.ico"} />
+        <link rel="icon" href={String(settings.favicon_url || "").trim() || "/favicon.ico"} />
       </Head>
       {children}
     </SiteSettingsContext.Provider>

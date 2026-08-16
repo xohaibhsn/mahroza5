@@ -48,7 +48,7 @@ export default function AboutPage({ content }: AboutPageProps) {
 
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://placehold.co/640x520/1e3a5f/ffffff?text=About+QHC"
+            src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=600&q=80"
             alt="About Quality Health Care"
             className="w-full rounded-2xl object-cover shadow-soft"
           />

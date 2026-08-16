@@ -13,30 +13,40 @@ type ServiceCardProps = {
   href?: string;
 };
 
-export default function ServiceCard({ service, href = "/services" }: ServiceCardProps) {
+export default function ServiceCard({ service, href }: ServiceCardProps) {
+  const linkHref = href || `/services#${service.id}`;
+  const hasImage = Boolean(service.image && String(service.image).trim());
+
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-soft">
-      <div className="relative aspect-[3/2] overflow-hidden bg-primary/5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={service.image}
-          alt={service.title}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
+    <article className="rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow bg-white h-full flex flex-col">
+      <div className="h-48 overflow-hidden">
+        {hasImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={service.image}
+            alt={service.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-[#1e3a5f] to-[#4a90d9] flex items-center justify-center text-5xl">
+            🏥
+          </div>
+        )}
       </div>
-      <div className="flex flex-1 flex-col p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
-          {service.short}
-        </p>
-        <h3 className="mt-1 font-display text-xl font-semibold text-primary">{service.title}</h3>
-        <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">{service.description}</p>
+      <div className="p-5 flex flex-1 flex-col">
+        {service.short ? (
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#4a90d9] mb-1">
+            {service.short}
+          </p>
+        ) : null}
+        <h3 className="font-bold text-[#1e3a5f] text-lg mb-2">{service.title}</h3>
+        <p className="text-gray-600 text-sm mb-4 flex-1">{service.description}</p>
         <Link
-          href={href}
-          className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-secondary transition group-hover:gap-2"
+          href={linkHref}
+          className="text-[#4a90d9] font-semibold text-sm hover:underline"
         >
-          Know More
-          <span aria-hidden>→</span>
+          Know More →
         </Link>
       </div>
     </article>

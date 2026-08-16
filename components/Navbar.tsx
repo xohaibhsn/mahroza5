@@ -1,16 +1,32 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { navLinks } from "@/lib/constants";
 
 export default function Navbar() {
   const router = useRouter();
-  const { settings, loading } = useSiteSettings();
   const [open, setOpen] = useState(false);
-  const logoUrl =
-    typeof settings.logo_url === "string" ? settings.logo_url.trim() : "";
-  const hasLogo = Boolean(logoUrl);
+  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [logoReady, setLogoReady] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/site-content");
+        const data = await res.json();
+        const url = String(data?.data?.logo_url || "").trim();
+        if (active) setLogoUrl(url);
+      } catch {
+        if (active) setLogoUrl("");
+      } finally {
+        if (active) setLogoReady(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const close = () => setOpen(false);
@@ -31,13 +47,13 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-primary shadow-soft">
       <div className="container-page flex h-16 items-center justify-between lg:h-[4.25rem]">
-        <Link href="/" className="group flex min-h-10 min-w-[140px] items-center gap-2" aria-label="QHC home">
-          {loading ? null : hasLogo ? (
+        <Link href="/" className="group flex min-h-12 min-w-[140px] items-center gap-2" aria-label="QHC home">
+          {!logoReady ? null : logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={logoUrl}
-              alt="QHC logo"
-              className="h-10 w-auto max-w-[180px] object-contain sm:h-12"
+              alt="QHC Logo"
+              className="h-12 w-auto max-w-[200px] object-contain"
             />
           ) : (
             <span className="font-display text-lg font-bold tracking-tight text-white sm:text-xl">

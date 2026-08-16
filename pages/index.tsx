@@ -15,28 +15,31 @@ function phoneToWhatsApp(phone: string) {
   return `https://wa.me/${digits.startsWith("0") ? `92${digits.slice(1)}` : digits}`;
 }
 
-const whyIcons = [
-  (
-    <svg key="1" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.6-1A9 9 0 1 1 12 3a9 9 0 0 1 8.6 6z" />
-    </svg>
-  ),
-  (
-    <svg key="2" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
-    </svg>
-  ),
-  (
-    <svg key="3" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.3 12a8 8 0 0 1 15.4 0M12 12v8m-4 0h8" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
-    </svg>
-  ),
-  (
-    <svg key="4" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-    </svg>
-  ),
+const whyCards = [
+  {
+    emoji: "🎓",
+    title: "Qualified Healthcare Experts",
+    key: "why_point_1" as const,
+    bg: "bg-[#1e3a5f]",
+  },
+  {
+    emoji: "🕐",
+    title: "Available 24/7",
+    key: "why_point_2" as const,
+    bg: "bg-[#4a90d9]",
+  },
+  {
+    emoji: "❤️",
+    title: "Patient-Centric Approach",
+    key: "why_point_3" as const,
+    bg: "bg-rose-500",
+  },
+  {
+    emoji: "🏠",
+    title: "Home Delivery of Care",
+    key: "why_point_4" as const,
+    bg: "bg-emerald-600",
+  },
 ];
 
 type HomePageProps = {
@@ -47,10 +50,30 @@ type HomePageProps = {
 
 export default function HomePage({ content, services, testimonials }: HomePageProps) {
   const stats = [
-    { value: content.stat_patients, label: "Happy Patients" },
-    { value: content.stat_services, label: "Services" },
-    { value: content.stat_availability, label: "Available" },
-    { value: content.stat_location, label: "Based" },
+    {
+      value: content.stat_patients,
+      label: "Patients",
+      icon: "👥",
+      border: "border-[#1e3a5f]",
+    },
+    {
+      value: content.stat_services,
+      label: "Services",
+      icon: "🏥",
+      border: "border-[#4a90d9]",
+    },
+    {
+      value: content.stat_availability,
+      label: "Available",
+      icon: "⏰",
+      border: "border-emerald-500",
+    },
+    {
+      value: content.stat_location,
+      label: "City",
+      icon: "📍",
+      border: "border-rose-400",
+    },
   ];
 
   return (
@@ -98,12 +121,10 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
           <div className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80"
+              src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=800&q=80"
               alt="Healthcare Professional"
-              className="w-full rounded-2xl object-cover shadow-2xl"
-              style={{ height: "450px" }}
+              className="h-[450px] w-full rounded-2xl object-cover shadow-2xl"
             />
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-[#1e3a5f]/20 to-transparent" />
           </div>
         </div>
       </section>
@@ -134,62 +155,69 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
       </section>
 
       <section className="bg-white py-16 sm:py-20">
-        <div className="container-page grid items-center gap-12 lg:grid-cols-2">
-          <div>
+        <div className="container-page">
+          <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-secondary">
               Why Choose Us
             </p>
             <h2 className="section-title mt-2">
               {content.about_heading || "Why families across Lahore trust QHC"}
             </h2>
-            <p className="section-subtitle">
+            <p className="section-subtitle mx-auto">
               {content.about_description || content.about_text}
             </p>
-
-            <ul className="mt-8 space-y-5">
-              {[
-                content.why_point_1,
-                content.why_point_2,
-                content.why_point_3,
-                content.why_point_4,
-              ].map((point, index) => (
-                <li key={`${index}-${point}`} className="flex gap-4">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
-                    {whyIcons[index]}
-                  </span>
-                  <div>
-                    <p className="font-semibold text-primary">{point}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {whyCards.map((card) => (
+              <div
+                key={card.title}
+                className="rounded-2xl border border-slate-100 bg-surface p-6 shadow-card"
+              >
+                <div
+                  className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl text-white ${card.bg}`}
+                >
+                  {card.emoji}
+                </div>
+                <h3 className="font-semibold text-primary">{card.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  {content[card.key] || card.title}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 grid gap-4 sm:grid-cols-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://placehold.co/400x480/1e3a5f/ffffff?text=Care+Team"
+              src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80"
               alt="QHC care team"
-              className="h-full w-full rounded-2xl object-cover shadow-card sm:mt-8"
+              className="h-64 w-full rounded-2xl object-cover shadow-card sm:h-80"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://placehold.co/400x480/4a90d9/ffffff?text=Patient+Care"
+              src="https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=600&q=80"
               alt="Patient receiving care at home"
-              className="h-full w-full rounded-2xl object-cover shadow-card"
+              className="h-64 w-full rounded-2xl object-cover shadow-card sm:h-80"
             />
           </div>
         </div>
       </section>
 
-      <section className="bg-primary py-14 text-white">
-        <div className="container-page grid grid-cols-2 gap-8 md:grid-cols-4">
+      <section className="bg-surface py-14">
+        <div className="container-page grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
           {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-display text-4xl font-semibold text-secondary-light sm:text-5xl">
+            <div
+              key={stat.label}
+              className={`rounded-2xl border-t-4 bg-white p-6 text-center shadow-card ${stat.border}`}
+            >
+              <p className="text-3xl" aria-hidden>
+                {stat.icon}
+              </p>
+              <p className="mt-3 font-display text-3xl font-semibold text-primary sm:text-4xl">
                 {stat.value}
               </p>
-              <p className="mt-2 text-sm font-medium uppercase tracking-wider text-white/70">
+              <p className="mt-2 text-sm font-medium uppercase tracking-wider text-slate-500">
                 {stat.label}
               </p>
             </div>
@@ -213,9 +241,24 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
             {testimonials.map((item) => (
               <blockquote
                 key={`${item.name}-${item.role}`}
-                className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-card"
+                className="relative flex h-full flex-col rounded-2xl bg-white p-6 shadow-card"
               >
-                <div className="flex gap-1 text-secondary" aria-hidden>
+                <span className="absolute right-5 top-4 text-4xl leading-none text-secondary/20" aria-hidden>
+                  &ldquo;
+                </span>
+                <div className="flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=1e3a5f&color=fff&size=60&rounded=true`}
+                    alt={item.name}
+                    className="h-14 w-14 rounded-full"
+                  />
+                  <div>
+                    <cite className="not-italic font-semibold text-primary">{item.name}</cite>
+                    {item.role ? <p className="text-xs text-slate-500">{item.role}</p> : null}
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-1 text-amber-400" aria-hidden>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <svg
                       key={i}
@@ -229,12 +272,8 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
                   ))}
                 </div>
                 <p className="mt-4 flex-1 text-sm leading-relaxed text-slate-600">
-                  &ldquo;{item.quote}&rdquo;
+                  {item.quote}
                 </p>
-                <footer className="mt-5 border-t border-slate-100 pt-4">
-                  <cite className="not-italic font-semibold text-primary">{item.name}</cite>
-                  <p className="text-xs text-slate-500">{item.role}</p>
-                </footer>
               </blockquote>
             ))}
           </div>
