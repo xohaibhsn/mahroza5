@@ -103,17 +103,25 @@ export default function SiteSettingsProvider({ children }: { children: ReactNode
     refresh();
   }, [refresh]);
 
+  const faviconHref = String(settings.favicon_url || "").trim() || "/favicon.png";
+
   useEffect(() => {
-    const favicon = String(settings.favicon_url || "").trim();
-    const href = favicon || "/favicon.ico";
-    let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement("link");
-      link.rel = "icon";
-      document.head.appendChild(link);
-    }
-    link.href = href;
-  }, [settings.favicon_url]);
+    const applyIcon = (rel: string, href: string, type?: string) => {
+      let link = document.querySelector(`link[rel='${rel}']`) as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = rel;
+        document.head.appendChild(link);
+      }
+      if (type) link.type = type;
+      // Cache-bust so browsers pick up admin updates
+      link.href = href.includes("?") ? `${href}&v=${Date.now()}` : `${href}?v=${Date.now()}`;
+    };
+
+    applyIcon("icon", faviconHref, faviconHref.endsWith(".png") || faviconHref.includes("/image/") ? "image/png" : undefined);
+    applyIcon("shortcut icon", faviconHref);
+    applyIcon("apple-touch-icon", faviconHref);
+  }, [faviconHref]);
 
   const value = useMemo(
     () => ({
@@ -129,7 +137,9 @@ export default function SiteSettingsProvider({ children }: { children: ReactNode
       <Head>
         <title>{settings.site_title}</title>
         <meta name="description" content={settings.meta_description} />
-        <link rel="icon" href={String(settings.favicon_url || "").trim() || "/favicon.ico"} />
+        <link rel="icon" type="image/png" href={faviconHref} key={`icon-${faviconHref}`} />
+        <link rel="shortcut icon" href={faviconHref} key={`shortcut-${faviconHref}`} />
+        <link rel="apple-touch-icon" href={faviconHref} key={`apple-${faviconHref}`} />
       </Head>
       {children}
     </SiteSettingsContext.Provider>

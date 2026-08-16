@@ -98,7 +98,7 @@ async function seedCatalogIfEmpty() {
       "%ECG%",
     ],
     [
-      "https://images.unsplash.com/photo-1542849808-1ed9a6d0e862?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&w=600&q=80",
       "%Elderly%",
     ],
     [
@@ -116,7 +116,10 @@ async function seedCatalogIfEmpty() {
       `UPDATE services
        SET image = :image
        WHERE title LIKE :pattern
-         AND (image IS NULL OR image = '' OR image LIKE '%placehold.co%')`,
+         AND (
+           image IS NULL OR image = '' OR image LIKE '%placehold.co%'
+           OR image LIKE '%photo-1542849808%'
+         )`,
       { image: imageUrl, pattern }
     );
   }
