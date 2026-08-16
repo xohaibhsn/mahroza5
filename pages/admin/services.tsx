@@ -6,7 +6,6 @@ type Service = {
   title: string;
   short_text: string | null;
   description: string | null;
-  icon: string | null;
   image: string | null;
   is_active: number;
   sort_order: number;
@@ -16,7 +15,6 @@ const emptyForm = {
   title: "",
   short_text: "",
   description: "",
-  icon: "🏥",
   image: "",
   is_active: true,
   sort_order: 0,
@@ -52,7 +50,6 @@ export default function AdminServicesPage() {
       const res = await fetch("/api/admin-services", { credentials: "include" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message || "Failed to load services.");
-      // API returns a raw array
       setRows(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load.");
@@ -77,7 +74,6 @@ export default function AdminServicesPage() {
       title: row.title,
       short_text: row.short_text || "",
       description: row.description || "",
-      icon: row.icon || "🏥",
       image: row.image || "",
       is_active: Boolean(row.is_active),
       sort_order: row.sort_order || 0,
@@ -97,7 +93,7 @@ export default function AdminServicesPage() {
         body: JSON.stringify({ id: editingId || undefined, ...form }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Save failed.");
+      if (!res.ok) throw new Error(data.error || data.message || "Save failed.");
       resetForm();
       await load();
     } catch (err) {
@@ -127,7 +123,7 @@ export default function AdminServicesPage() {
     });
     const data = await res.json();
     if (!res.ok) {
-      alert(data.message || "Delete failed");
+      alert(data.error || data.message || "Delete failed");
       return;
     }
     if (editingId === id) resetForm();
@@ -151,12 +147,6 @@ export default function AdminServicesPage() {
             />
             <input
               className="input-field"
-              placeholder="Icon emoji (e.g. 🏥)"
-              value={form.icon}
-              onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
-            />
-            <input
-              className="input-field"
               placeholder="Short text"
               value={form.short_text}
               onChange={(e) => setForm((f) => ({ ...f, short_text: e.target.value }))}
@@ -168,23 +158,28 @@ export default function AdminServicesPage() {
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setUploading(true);
-                try {
-                  const url = await uploadImage(file);
-                  setForm((f) => ({ ...f, image: url }));
-                } catch (err) {
-                  setError(err instanceof Error ? err.message : "Upload failed");
-                } finally {
-                  setUploading(false);
-                }
-              }}
-            />
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Image upload
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setUploading(true);
+                  try {
+                    const url = await uploadImage(file);
+                    setForm((f) => ({ ...f, image: url }));
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Upload failed");
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              />
+            </div>
             {uploading ? <p className="text-xs text-secondary">Uploading...</p> : null}
             {form.image ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -238,7 +233,14 @@ export default function AdminServicesPage() {
                     <tr key={row.id} className="border-t border-slate-100 align-top">
                       <td className="px-4 py-3">
                         <div className="flex gap-3">
-                          <span className="text-2xl">{row.icon || "🏥"}</span>
+                          {row.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={row.image}
+                              alt=""
+                              className="h-12 w-12 shrink-0 rounded object-cover"
+                            />
+                          ) : null}
                           <div>
                             <p className="font-medium text-primary">{row.title}</p>
                             <p className="mt-1 line-clamp-2 text-xs text-slate-500">

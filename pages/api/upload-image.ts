@@ -5,19 +5,13 @@ import type { Fields, Files } from "formidable";
 import fs from "fs";
 import { methodNotAllowed } from "@/lib/adminAuth";
 import { requireAdminJwt } from "@/lib/adminApiAuth";
+import { configureCloudinary } from "@/lib/cloudinary";
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 async function readJsonBody(req: NextApiRequest) {
   const chunks: Buffer[] = [];
@@ -54,10 +48,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return methodNotAllowed(res, ["POST"]);
   }
 
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  const { api_secret } = configureCloudinary();
+  if (!api_secret) {
     return res.status(500).json({
       success: false,
-      message: "Cloudinary environment variables are missing.",
+      message: "CLOUDINARY_API_SECRET is missing.",
     });
   }
 
@@ -111,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error("upload-image error:", error);
     return res.status(500).json({
       success: false,
-      message: "Image upload failed. Check Cloudinary credentials.",
+      message: error instanceof Error ? error.message : "Image upload failed.",
     });
   }
 }

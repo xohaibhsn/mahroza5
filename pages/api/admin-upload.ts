@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error("admin-upload error:", error);
     return res.status(500).json({
       success: false,
-      message: "Image upload failed.",
+      message: error instanceof Error ? error.message : "Image upload failed.",
     });
   }
 }
