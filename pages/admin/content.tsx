@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
+import ImageSizeHint from "@/components/ImageSizeHint";
 
 type ContentGroups = {
   hero: Record<string, string>;
@@ -14,16 +15,46 @@ type FieldDef = {
   label: string;
   multiline?: boolean;
   image?: boolean;
+  imageSize?: string;
+  imageNote?: string;
 };
 
 const FIELDS: FieldDef[] = [
   { section: "hero", key: "heading", label: "Hero Heading" },
   { section: "hero", key: "subheading", label: "Hero Subheading", multiline: true },
   { section: "hero", key: "button_text", label: "Hero Button Text" },
-  { section: "hero", key: "slide_1", label: "Hero Slider Image 1", image: true },
-  { section: "hero", key: "slide_2", label: "Hero Slider Image 2", image: true },
-  { section: "hero", key: "slide_3", label: "Hero Slider Image 3", image: true },
-  { section: "hero", key: "slide_4", label: "Hero Slider Image 4", image: true },
+  {
+    section: "hero",
+    key: "slide_1",
+    label: "Hero Slider Image 1",
+    image: true,
+    imageSize: "1200 × 900 px",
+    imageNote: "JPG/WebP, landscape 4:3, homepage right slider",
+  },
+  {
+    section: "hero",
+    key: "slide_2",
+    label: "Hero Slider Image 2",
+    image: true,
+    imageSize: "1200 × 900 px",
+    imageNote: "JPG/WebP, landscape 4:3, homepage right slider",
+  },
+  {
+    section: "hero",
+    key: "slide_3",
+    label: "Hero Slider Image 3",
+    image: true,
+    imageSize: "1200 × 900 px",
+    imageNote: "JPG/WebP, landscape 4:3, homepage right slider",
+  },
+  {
+    section: "hero",
+    key: "slide_4",
+    label: "Hero Slider Image 4",
+    image: true,
+    imageSize: "1200 × 900 px",
+    imageNote: "JPG/WebP, landscape 4:3, homepage right slider",
+  },
   { section: "about", key: "heading", label: "About Heading" },
   { section: "about", key: "description", label: "About Description", multiline: true },
   { section: "stats", key: "patients", label: "Patients count" },
@@ -186,6 +217,10 @@ export default function AdminContentPage() {
                       </label>
                       {field.image ? (
                         <div className="space-y-3">
+                          <ImageSizeHint
+                            size={field.imageSize || "1200 × 900 px"}
+                            note={field.imageNote}
+                          />
                           <input
                             className="input-field"
                             placeholder="Image URL"

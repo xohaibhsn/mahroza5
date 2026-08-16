@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
+import ImageSizeHint from "@/components/ImageSizeHint";
 
 type SettingsForm = {
   site_title: string;
@@ -210,6 +211,10 @@ export default function AdminSettingsPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Logo Upload</label>
+              <ImageSizeHint
+                size="400 × 100 px"
+                note="PNG transparent preferred (or 800 × 200 for retina), landscape"
+              />
               <p className="mb-2 text-xs text-slate-500">
                 Upload PNG/JPG. After upload, URL must save to DB (green message).
               </p>
@@ -248,6 +253,10 @@ export default function AdminSettingsPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Favicon Upload</label>
+              <ImageSizeHint
+                size="512 × 512 px"
+                note="PNG, square (browser tab icon)"
+              />
               <p className="mb-2 text-xs text-slate-500">
                 Small square PNG recommended. Must save to DB for browser tab icon.
               </p>

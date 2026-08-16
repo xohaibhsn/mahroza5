@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
+import ImageSizeHint from "@/components/ImageSizeHint";
 
 type Service = {
   id: number;
@@ -162,6 +163,10 @@ export default function AdminServicesPage() {
               <label className="mb-1 block text-sm font-medium text-slate-700">
                 Image upload
               </label>
+              <ImageSizeHint
+                size="800 × 600 px"
+                note="JPG/WebP, landscape 4:3, service cards on homepage & Services page"
+              />
               <input
                 type="file"
                 accept="image/*"
