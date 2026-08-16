@@ -6,8 +6,11 @@ import { navLinks } from "@/lib/constants";
 
 export default function Navbar() {
   const router = useRouter();
-  const { settings } = useSiteSettings();
+  const { settings, loading } = useSiteSettings();
   const [open, setOpen] = useState(false);
+  const logoUrl =
+    typeof settings.logo_url === "string" ? settings.logo_url.trim() : "";
+  const hasLogo = Boolean(logoUrl);
 
   useEffect(() => {
     const close = () => setOpen(false);
@@ -28,11 +31,11 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-primary shadow-soft">
       <div className="container-page flex h-16 items-center justify-between lg:h-[4.25rem]">
-        <Link href="/" className="group flex items-center gap-2" aria-label="QHC home">
-          {settings.logo_url && settings.logo_url.trim() !== "" ? (
+        <Link href="/" className="group flex min-h-10 min-w-[140px] items-center gap-2" aria-label="QHC home">
+          {loading ? null : hasLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={settings.logo_url}
+              src={logoUrl}
               alt="QHC logo"
               className="h-10 w-auto max-w-[180px] object-contain sm:h-12"
             />

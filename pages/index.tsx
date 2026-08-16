@@ -96,13 +96,14 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 rounded-[2rem] bg-secondary/20 blur-2xl" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600"
-              alt="Healthcare professional providing care"
-              className="relative w-full rounded-[1.5rem] object-cover shadow-soft"
+              src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80"
+              alt="Healthcare Professional"
+              className="w-full rounded-2xl object-cover shadow-2xl"
+              style={{ height: "450px" }}
             />
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-[#1e3a5f]/20 to-transparent" />
           </div>
         </div>
       </section>
