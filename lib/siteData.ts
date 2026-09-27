@@ -3,7 +3,7 @@ import {
   services as fallbackServices,
   testimonials as fallbackTestimonials,
 } from "@/lib/constants";
-import { ensureAdminSchema, type ServiceRow, type TestimonialRow } from "@/lib/adminSchema";
+import type { ServiceRow, TestimonialRow } from "@/lib/adminSchema";
 import { loadContentMap } from "@/lib/contentStore";
 import { getPool } from "@/lib/db";
 import type { SiteContent, SiteService, SiteTestimonial } from "@/lib/siteTypes";
@@ -189,7 +189,6 @@ function mapContent(map: Record<string, string>): SiteContent {
 
 export async function getSiteContent(): Promise<SiteContent> {
   try {
-    await ensureAdminSchema();
     return mapContent(await loadContentMap());
   } catch (error) {
     console.error("getSiteContent fallback:", error);
@@ -199,7 +198,6 @@ export async function getSiteContent(): Promise<SiteContent> {
 
 export async function getActiveServices(): Promise<SiteService[]> {
   try {
-    await ensureAdminSchema();
     await seedCatalogIfEmpty();
     const pool = getPool();
     const [rows] = await pool.query(
@@ -233,7 +231,6 @@ export async function getActiveServices(): Promise<SiteService[]> {
 
 export async function getActiveTestimonials(): Promise<SiteTestimonial[]> {
   try {
-    await ensureAdminSchema();
     await seedCatalogIfEmpty();
     const pool = getPool();
     const [rows] = await pool.query(
