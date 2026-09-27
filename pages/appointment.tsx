@@ -1,4 +1,5 @@
 import Head from "next/head";
+import type { GetServerSidePropsContext } from "next";
 import AppointmentForm from "@/components/AppointmentForm";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
@@ -80,7 +81,12 @@ export default function AppointmentPage({ content }: AppointmentPageProps) {
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ res }: GetServerSidePropsContext) {
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=300, stale-while-revalidate=600"
+  );
+
   const { getSiteContent } = await import("@/lib/siteData");
   const content = await getSiteContent();
   return { props: { content } };

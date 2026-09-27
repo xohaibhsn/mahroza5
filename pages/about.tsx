@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
+import type { GetServerSidePropsContext } from "next";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
 import SeoHead, { seoFromContent } from "@/components/SeoHead";
@@ -101,7 +102,12 @@ export default function AboutPage({ content }: AboutPageProps) {
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ res }: GetServerSidePropsContext) {
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=300, stale-while-revalidate=600"
+  );
+
   const { getSiteContent } = await import("@/lib/siteData");
   const content = await getSiteContent();
   return { props: { content } };

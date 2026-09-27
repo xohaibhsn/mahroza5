@@ -9,6 +9,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=300, stale-while-revalidate=600"
+    );
+
     const map = await loadContentMap();
     const grouped = groupContent(map);
 
@@ -79,6 +84,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch (error) {
     console.error("site-content api error:", error);
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=300, stale-while-revalidate=600"
+    );
     return res.status(200).json({
       settings: {
         logo_url: "",

@@ -1,6 +1,7 @@
 import Head from "next/head";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import type { GetServerSidePropsContext } from "next";
 import AppointmentForm from "@/components/AppointmentForm";
 import Layout from "@/components/Layout";
 import SeoHead, { seoFromContent } from "@/components/SeoHead";
@@ -263,7 +264,12 @@ export default function HomePage({ content, services, testimonials }: HomePagePr
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ res }: GetServerSidePropsContext) {
+  res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=300, stale-while-revalidate=600"
+  );
+
   const { getActiveServices, getActiveTestimonials, getSiteContent } = await import(
     "@/lib/siteData"
   );
