@@ -1,43 +1,23 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { useSiteSettings } from "@/components/SiteSettingsProvider";
 import { company, navLinks } from "@/lib/constants";
 import { phoneToTel } from "@/lib/siteDataClient";
 
 export default function Navbar() {
   const router = useRouter();
+  const { settings, loading } = useSiteSettings();
   const [open, setOpen] = useState(false);
-  const [logoUrl, setLogoUrl] = useState("");
-  const [phone, setPhone] = useState(company.phone);
-  const [ready, setReady] = useState(false);
   const [imgBroken, setImgBroken] = useState(false);
 
+  const logoUrl = String(settings.logo_url || "").trim();
+  const phone = settings.phone || company.phone;
+  const ready = !loading;
+
   useEffect(() => {
-    let active = true;
-    const loadLogo = async () => {
-      try {
-        const res = await fetch(`/api/site-content?t=${Date.now()}`, { cache: "no-store" });
-        const data = await res.json();
-        if (!active) return;
-        const url = String(
-          data?.settings?.logo_url || data?.data?.logo_url || data?.logo_url || ""
-        ).trim();
-        setLogoUrl(url);
-        setImgBroken(false);
-        setPhone(
-          data?.settings?.phone || data?.data?.phone || data?.phone || company.phone
-        );
-      } catch {
-        if (active) setLogoUrl("");
-      } finally {
-        if (active) setReady(true);
-      }
-    };
-    loadLogo();
-    return () => {
-      active = false;
-    };
-  }, [router.asPath]);
+    setImgBroken(false);
+  }, [logoUrl]);
 
   useEffect(() => {
     const close = () => setOpen(false);

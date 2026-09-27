@@ -8,10 +8,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { DEFAULT_SLIDES } from "@/lib/contentSections";
 import type { SiteContent } from "@/lib/siteTypes";
 
 type SiteSettingsContextValue = {
   settings: SiteContent;
+  slides: string[];
   loading: boolean;
   refresh: () => Promise<void>;
 };
@@ -50,6 +52,7 @@ const defaultSettings: SiteContent = {
 
 const SiteSettingsContext = createContext<SiteSettingsContextValue>({
   settings: defaultSettings,
+  slides: DEFAULT_SLIDES,
   loading: true,
   refresh: async () => undefined,
 });
@@ -60,6 +63,7 @@ export function useSiteSettings() {
 
 export default function SiteSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<SiteContent>(defaultSettings);
+  const [slides, setSlides] = useState<string[]>(DEFAULT_SLIDES);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -102,6 +106,23 @@ export default function SiteSettingsProvider({ children }: { children: ReactNode
           data.stats?.availability ?? flat.stat_availability ?? prev.stat_availability,
         stat_location: data.stats?.city ?? flat.stat_location ?? prev.stat_location,
       }));
+
+      const apiSlides = Array.isArray(data.slides)
+        ? data.slides
+        : [
+            data.hero?.slide_1,
+            data.hero?.slide_2,
+            data.hero?.slide_3,
+            data.hero?.slide_4,
+          ];
+      const cleaned = apiSlides
+        .map((s: unknown) => String(s || "").trim())
+        .filter(Boolean) as string[];
+      setSlides(
+        cleaned.length >= 4
+          ? cleaned.slice(0, 4)
+          : [...cleaned, ...DEFAULT_SLIDES].slice(0, 4)
+      );
     } catch (error) {
       console.error("Failed to load site settings:", error);
     } finally {
@@ -136,10 +157,11 @@ export default function SiteSettingsProvider({ children }: { children: ReactNode
   const value = useMemo(
     () => ({
       settings,
+      slides,
       loading,
       refresh,
     }),
-    [settings, loading, refresh]
+    [settings, slides, loading, refresh]
   );
 
   return (
